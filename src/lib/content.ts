@@ -10,6 +10,8 @@ export interface Section {
   code?: string;
   codeTitle?: string;
   tip?: string;
+  codeNote?: string;
+  relatedTopicLink?: string;
 }
 
 export interface DocItem {
@@ -984,6 +986,7 @@ print(db1 is db2) # True (Same object)`
       },
       {
         title: "The Solution",
+        content: "We create a separate `PetFactory` class with a static method. The client code just calls `PetFactory.get_pet('dog')` and gets a Dog object. It doesn't need to know *how* to create a Dog or even that the class is named `Dog`.",
         code: `class Dog:
     def speak(self): return "Woof"
 class Cat:
@@ -1016,6 +1019,7 @@ print(pet.speak())`
       },
       {
         title: "Implementation",
+        content: "The Subject manages a list of subscribers and notifies them in a loop.",
         code: `class YouTubeChannel:
     def __init__(self):
         self.subscribers = [] # List of functions/objects
@@ -1057,6 +1061,7 @@ channel.upload_video("Python Tutorial")
       },
       {
         title: "Implementation",
+        content: "We define an abstract base class for the strategy, concrete implementations, and a context class that uses them.",
         code: `from abc import ABC, abstractmethod
 
 # 1. The Interface
@@ -1214,6 +1219,8 @@ my_lunch = (PizzaBuilder()
       {
         title: "Final Code Assembly",
         content: "Combining all pieces into a robust solution.",
+        codeNote: "Review Recursion: We pass 'path' down every call to build the error trace.",
+        relatedTopicLink: "pattern-validator",
         code: `def validate(schema, data, path="root"):
     def fail(msg): return {"valid": False, "error": msg, "path": path}
     
@@ -1278,6 +1285,8 @@ my_lunch = (PizzaBuilder()
       {
         title: "The Stack Solution",
         content: "- Global `store` dictionary for committed data.\n- `stack` list for temporary transactions.\n\nWhen `begin()` is called, we push a new empty `{}` to the stack. \nWhen `set(k,v)` is called, we write to the TOP of the stack (`stack[-1]`).",
+        codeNote: "Stack (LIFO): Last-In, First-Out. Using a stack allows us to isolate transaction layers.",
+        relatedTopicLink: "py-dsa-linear",
         code: `class KVStore:
     def __init__(self):
         self.store = {} # Permanent
@@ -1306,6 +1315,8 @@ my_lunch = (PizzaBuilder()
       {
         title: "Commit & Rollback",
         content: "Rollback is easy: Just pop the stack! \nCommit is harder: We must merge all stack layers into the permanent store.",
+        codeNote: "Stack Operation: Pop is O(1). Merge is O(N*K) where N is stack depth.",
+        relatedTopicLink: "py-dsa-linear",
         code: `    def rollback(self):
         if self.stack:
             self.stack.pop() # Undo all changes in this layer
@@ -1350,6 +1361,8 @@ my_lunch = (PizzaBuilder()
       {
         title: "Implementation",
         content: "We use `bisect` to find the start and end indices in O(log N).",
+        codeNote: "Bisect is Python's Binary Search. bisect_left finds the first insertion point. Crucial for Range Queries.",
+        relatedTopicLink: "py-dsa-sorting",
         code: `from collections import defaultdict
 import bisect
 
@@ -1395,6 +1408,9 @@ class LogSystem:
       },
       {
         title: "Implementation",
+        content: "We use `split` with a limit to separate headers from body, then parse line by line.",
+        codeNote: "String Splitting: Using maxsplit=1 is a pro move to avoid splitting the body if it contains the delimiter.",
+        relatedTopicLink: "py-strings",
         code: `def parse_http(raw_req):
     if not raw_req: return None
     
@@ -1498,6 +1514,9 @@ class LogSystem:
       },
       {
         title: "Implementation",
+        content: "We maintain an ID counter and a map. We encode the ID to Base62 for the short code.",
+        codeNote: "Base62 Encoding: Maps an integer ID to a short string. Essential for URL shorteners to keep URLs short.",
+        relatedTopicLink: "py-strings",
         code: `class URLShortener:
     def __init__(self):
         self.id_counter = 1
@@ -1547,6 +1566,9 @@ class LogSystem:
       },
       {
         title: "Implementation",
+        content: "We overwrite `buffer[head]` and move head. If buffer was full, we also move tail to 'forget' the oldest value.",
+        codeNote: "Modulo Arithmetic: `(ptr + 1) % N` creates the circular behavior without `if ptr == N` checks.",
+        relatedTopicLink: "py-operators",
         code: `class RingBuffer:
     def __init__(self, capacity):
         self.cap = capacity
@@ -1589,6 +1611,9 @@ class LogSystem:
       },
       {
         title: "Implementation",
+        content: "We walk down the Trie using the prefix. If we find the node, we run DFS from there to find all children marked `is_end`.",
+        codeNote: "Trie Traversal: Searching a prefix is O(L) where L is prefix length. DFS is O(V) where V is number of descendants.",
+        relatedTopicLink: "py-dsa-trees",
         code: `class TrieNode:
     def __init__(self):
         self.children = {}

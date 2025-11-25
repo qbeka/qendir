@@ -324,7 +324,7 @@ export default function DocumentationApp() {
                     </div>
 
                     {section.code && (
-                      <div className="my-8 rounded-2xl overflow-hidden border border-neutral-200 shadow-xl shadow-neutral-200/50 bg-[#1e1e1e]">
+                      <div className="group/code relative my-8 rounded-2xl overflow-hidden border border-neutral-200 shadow-xl shadow-neutral-200/50 bg-[#1e1e1e]">
                         <div className="flex items-center justify-between px-4 py-3 bg-[#252526] border-b border-[#333]">
                           <div className="flex gap-2">
                             <div className="w-3 h-3 rounded-full bg-[#ff5f56]" />
@@ -341,11 +341,29 @@ export default function DocumentationApp() {
                             </button>
                           </div>
                         </div>
-                        <div className="p-6 overflow-x-auto">
+                        <div className="p-6 overflow-x-auto relative">
                           <pre className="font-mono text-sm leading-relaxed text-neutral-300">
                             <code>{section.code}</code>
                           </pre>
                         </div>
+
+                        {/* Code Note Hover Overlay */}
+                        {section.codeNote && (
+                          <div className="absolute top-16 right-4 max-w-xs p-4 bg-indigo-600/95 backdrop-blur-md text-white rounded-xl shadow-2xl pointer-events-none opacity-0 translate-x-4 group-hover/code:opacity-100 group-hover/code:translate-x-0 transition-all duration-300 z-10 border border-white/10">
+                             <div className="flex items-start gap-3">
+                               <Lightbulb className="w-5 h-5 mt-0.5 flex-shrink-0 text-yellow-300" />
+                               <div>
+                                 <p className="text-sm font-bold mb-1">Analysis</p>
+                                 <p className="text-xs opacity-90 leading-relaxed">{section.codeNote}</p>
+                                 {section.relatedTopicLink && (
+                                    <div className="mt-3 pt-2 border-t border-white/20 text-[10px] uppercase tracking-wider font-bold opacity-90 flex items-center gap-1">
+                                      Ref: {section.relatedTopicLink} <ArrowRight size={10} />
+                                    </div>
+                                 )}
+                               </div>
+                             </div>
+                          </div>
+                        )}
                       </div>
                     )}
 
