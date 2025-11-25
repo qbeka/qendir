@@ -805,6 +805,31 @@ head.next = ListNode(2)`
     description: "Hierarchical data structures. Most 'Hard' interview problems involve Graphs or Trees.",
     sections: [
       {
+        title: "Tries (Prefix Trees)",
+        content: "A Tree optimized for string searches. Each node is a character. Paths from root are words. \n- **Usage**: Autocomplete, Spell Check, URL Router.\n- **Complexity**: O(L) to search a word of length L (faster than Hash Map if many words share prefixes).",
+        code: `class TrieNode:
+    def __init__(self):
+        self.children = {}
+        self.is_end = False
+
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
+
+    def insert(self, word):
+        node = self.root
+        for char in word:
+            node = node.children.setdefault(char, TrieNode())
+        node.is_end = True
+
+    def search(self, word):
+        node = self.root
+        for char in word:
+            if char not in node.children: return False
+            node = node.children[char]
+        return node.is_end`
+      },
+      {
         title: "Binary Trees",
         content: "Each node has at most 2 children (Left, Right). \n- **Traversal**: visiting every node. \n  - **DFS (Depth First)**: Go deep. (Pre-order, In-order, Post-order).\n  - **BFS (Breadth First)**: Go level by level.",
         code: `class TreeNode:
@@ -856,8 +881,19 @@ def bfs(start_node):
     description: "Knowing how sorting works helps you understand complexity (O(N log N)).",
     sections: [
       {
+        title: "Quick Sort (Partitioning)",
+        content: "Picks a 'pivot' element and partitions the array so smaller elements are on left, larger on right. Then recurses.\n- **Avg Time**: O(N log N)\n- **Worst Case**: O(N^2) (if already sorted)\n- **Space**: O(log N) (stack)\n- **Usage**: Default in many languages (C++, V8 JS) because it's cache-friendly and in-place.",
+        code: `def quick_sort(arr):
+    if len(arr) <= 1: return arr
+    pivot = arr[len(arr) // 2]
+    left = [x for x in arr if x < pivot]
+    middle = [x for x in arr if x == pivot]
+    right = [x for x in arr if x > pivot]
+    return quick_sort(left) + middle + quick_sort(right)`
+      },
+      {
         title: "Merge Sort (Divide & Conquer)",
-        content: "Recursively split the list in half until you have single items. Then 'merge' them back together in sorted order. Guaranteed O(N log N) time, but uses O(N) extra memory.",
+        content: "Recursively split the list in half until single items. Then merge sorted halves.\n- **Time**: O(N log N) always.\n- **Space**: O(N) (not in-place).\n- **Usage**: Stable sort (preserves order of duplicates). Good for Linked Lists.",
         code: `def merge_sort(arr):
     if len(arr) <= 1: return arr
     
@@ -1596,6 +1632,58 @@ class LogSystem:
     ]
   },
   {
+    id: "prob-implement-trie",
+    category: "Solved Problems",
+    title: "Implement Trie (Prefix Tree)",
+    description: "A specialized tree for storing strings. The foundation of Autocomplete.",
+    sections: [
+      {
+        title: "The Task",
+        content: "Implement a Trie with `insert`, `search`, and `startsWith` methods."
+      },
+      {
+        title: "Why It's Practical",
+        content: "Standard way to implement 'Autocomplete' or 'Spell Check'. Used in Google Search bar, DNA sequencing, and IP Routing."
+      },
+      {
+        title: "Implementation",
+        content: "The implementation uses a recursive or iterative approach to insert and search.",
+        codeNote: "Trie Node: A dict of children + a boolean flag. We traverse char by char.",
+        relatedTopicLink: "py-dsa-trees",
+        code: `class TrieNode:
+    def __init__(self):
+        self.children = {}
+        self.is_end = False
+
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
+
+    def insert(self, word):
+        node = self.root
+        for char in word:
+            if char not in node.children:
+                node.children[char] = TrieNode()
+            node = node.children[char]
+        node.is_end = True
+
+    def search(self, word):
+        node = self._find(word)
+        return node is not None and node.is_end
+
+    def startsWith(self, prefix):
+        return self._find(prefix) is not None
+
+    def _find(self, prefix):
+        node = self.root
+        for char in prefix:
+            if char not in node.children: return None
+            node = node.children[char]
+        return node`
+      }
+    ]
+  },
+  {
     id: "prob-autocomplete",
     category: "Solved Problems",
     title: "AutoComplete System (Trie)",
@@ -1897,6 +1985,394 @@ def run_tasks(tasks, dependencies):
 
 def execute(task):
     return True # Mock`
+      }
+    ]
+  },
+
+  // =========================================
+  // RESTORED & UPDATED PRACTICAL PROBLEMS
+  // =========================================
+  {
+    id: "prob-lru-cache",
+    category: "Solved Problems",
+    title: "LRU Cache (Least Recently Used)",
+    description: "Design a cache that removes the 'Least Recently Used' item when full. The #1 Interview Question.",
+    sections: [
+      {
+        title: "The Task",
+        content: "Design a data structure that follows the constraints of a Least Recently Used (LRU) cache.\n\n**Why it's #1**: It forces you to use two data structures together: a Hash Map (for fast access) and a Doubly Linked List (to track order)."
+      },
+      {
+        title: "Real World Application",
+        content: "Used in Redis, Web Browser History (Back button), and CPU Caches."
+      },
+      {
+        title: "Implementation Strategy",
+        content: "We maintain a Doubly Linked List. \n- **Head**: Most Recently Used (MRU).\n- **Tail**: Least Recently Used (LRU).\n- `get(key)`: Move node to Head.\n- `put(key)`: Create/Update node, move to Head. If full, remove Tail.",
+        codeNote: "OrderedDict: Python's 'collections.OrderedDict' actually implements this exact logic internally. In an interview, ask if you can use it. If not, build the DLL manually.",
+        relatedTopicLink: "py-dsa-linear",
+        code: `class Node:
+    def __init__(self, key=0, val=0):
+        self.key, self.val = key, val
+        self.prev = self.next = None
+
+class LRUCache:
+    def __init__(self, capacity):
+        self.cap = capacity
+        self.cache = {} # map key -> node
+        # Dummy head/tail to avoid null checks
+        self.head, self.tail = Node(), Node()
+        self.head.next = self.tail
+        self.tail.prev = self.head
+
+    def _remove(self, node):
+        prev, nxt = node.prev, node.next
+        prev.next, nxt.prev = nxt, prev
+
+    def _add(self, node):
+        # Add to head (MRU)
+        nxt = self.head.next
+        self.head.next = node
+        node.prev = self.head
+        node.next = nxt
+        nxt.prev = node
+
+    def get(self, key):
+        if key in self.cache:
+            node = self.cache[key]
+            self._remove(node)
+            self._add(node) # Move to front
+            return node.val
+        return -1
+
+    def put(self, key, value):
+        if key in self.cache:
+            self._remove(self.cache[key])
+        
+        node = Node(key, value)
+        self._add(node)
+        self.cache[key] = node
+        
+        if len(self.cache) > self.cap:
+            # Remove LRU (from tail)
+            lru = self.tail.prev
+            self._remove(lru)
+            del self.cache[lru.key]`
+      }
+    ]
+  },
+  {
+    id: "prob-hit-counter",
+    category: "Solved Problems",
+    title: "Design Hit Counter",
+    description: "Count hits in the last 5 minutes. Tests Time Window logic and Cleanup.",
+    sections: [
+      {
+        title: "The Task",
+        content: "1. `hit(timestamp)`: Record a hit.\n2. `getHits(timestamp)`: Return hits in range `[timestamp - 300s, timestamp]`.\n\n**Constraint:** Many hits might arrive at the same second."
+      },
+      {
+        title: "Real World Application",
+        content: "Used in Rate Limiters, API Analytics, and DDoS protection systems."
+      },
+      {
+        title: "Implementation (Queue)",
+        content: "This is sufficient for most interviews. `deque` allows O(1) pops from the left.",
+        codeNote: "Memory Cleanup: Notice the while loop. It acts as a garbage collector, keeping only relevant data in memory. This prevents memory leaks in long-running systems.",
+        relatedTopicLink: "py-dsa-linear",
+        code: `from collections import deque
+
+class HitCounter:
+    def __init__(self):
+        self.q = deque()
+
+    def hit(self, timestamp):
+        self.q.append(timestamp)
+
+    def getHits(self, timestamp):
+        # Remove hits older than 5 mins (300s)
+        while self.q and timestamp - self.q[0] >= 300:
+            self.q.popleft()
+        return len(self.q)`
+      }
+    ]
+  },
+  {
+    id: "prob-calculator",
+    category: "Solved Problems",
+    title: "Basic Calculator II",
+    description: "Evaluate a string expression '3+2*2'. Tests Stack usage and Operator Precedence.",
+    sections: [
+      {
+        title: "The Task",
+        content: "Evaluate strings like `3+2*2`. \n- `*` and `/` have higher priority than `+` and `-`.\n- No parentheses in this version."
+      },
+      {
+        title: "Real World Application",
+        content: "Used in Excel formula evaluation and Compiler design (Abstract Syntax Trees)."
+      },
+      {
+        title: "Implementation",
+        content: "Pay attention to how we construct multi-digit numbers.",
+        codeNote: "Deferred Execution: We don't perform + or - immediately. We push them to the stack. We only execute * and / immediately. The final sum() handles the low-priority ops.",
+        relatedTopicLink: "py-dsa-linear",
+        code: `def calculate(s):
+    if not s: return 0
+    stack, num, sign = [], 0, "+"
+    
+    for i in range(len(s)):
+        if s[i].isdigit():
+            num = num * 10 + int(s[i])
+            
+        if s[i] in "+-*/" or i == len(s) - 1:
+            if sign == "+":
+                stack.append(num)
+            elif sign == "-":
+                stack.append(-num)
+            elif sign == "*":
+                stack.append(stack.pop() * num)
+            elif sign == "/":
+                top = stack.pop()
+                stack.append(int(top / num))
+            
+            sign = s[i]
+            num = 0
+            
+    return sum(stack)`
+      }
+    ]
+  },
+  {
+    id: "prob-simplify-path",
+    category: "Solved Problems",
+    title: "Simplify Path",
+    description: "Canonicalize a Unix path like '/a/./b/../../c/'. Tests Stack logic.",
+    sections: [
+      {
+        title: "The Task",
+        content: "Convert absolute path to canonical path.\n- `.`: Current directory (No-op).\n- `..`: Parent directory (Go up).\n- `//`: Treat as single slash."
+      },
+      {
+        title: "Real World Application",
+        content: "Used in Navigation breadcrumbs and File System navigation."
+      },
+      {
+        title: "Implementation",
+        content: "1. Split by `/`.\n2. Iterate tokens.\n3. If `..`, pop stack (if not empty).\n4. If `.` or empty, skip.\n5. Else, push.",
+        codeNote: "String Splitting: split('/') handles the multiple slashes automatically by creating empty strings, which we filter out.",
+        relatedTopicLink: "py-strings",
+        code: `def simplifyPath(path):
+    stack = []
+    
+    for part in path.split("/"):
+        if part == "..":
+            if stack: stack.pop()
+        elif part == "." or not part:
+            continue
+        else:
+            stack.append(part)
+            
+    return "/" + "/".join(stack)`
+      }
+    ]
+  },
+  {
+    id: "prob-mini-parser",
+    category: "Solved Problems",
+    title: "Mini Parser (Nested Integers)",
+    description: "Deserialize a string '[123,[456,[789]]]' into a nested object list.",
+    sections: [
+      {
+        title: "The Task",
+        content: "Deserialize a string into a nested integer structure."
+      },
+      {
+        title: "Real World Application",
+        content: "This IS your JSON question. Used in JSON.parse(), XML parsers."
+      },
+      {
+        title: "Implementation (Stack)",
+        content: "We keep a stack of *NestedIntegers* (lists).",
+        codeNote: "Stack for Nesting: The stack represents the 'current depth'. stack[-1] is the list we are currently filling.",
+        relatedTopicLink: "py-dsa-linear",
+        code: `def deserialize(s):
+    if s[0] != '[': return int(s)
+    
+    stack = []
+    curr_num = ""
+    
+    for char in s:
+        if char == '[':
+            stack.append([]) # Start new list
+        elif char == ']':
+            if curr_num:
+                stack[-1].append(int(curr_num))
+                curr_num = ""
+            if len(stack) > 1:
+                completed = stack.pop()
+                stack[-1].append(completed)
+        elif char == ',':
+            if curr_num:
+                stack[-1].append(int(curr_num))
+                curr_num = ""
+        else:
+            curr_num += char
+            
+    return stack[0]`
+      }
+    ]
+  },
+  {
+    id: "prob-random-set",
+    category: "Solved Problems",
+    title: "Insert Delete GetRandom O(1)",
+    description: "Build a set where you can insert, remove, and get a random element all in constant time.",
+    sections: [
+      {
+        title: "The Task",
+        content: "Build a set where you can insert, remove, and get a random element all in constant time."
+      },
+      {
+        title: "Real World Application",
+        content: "Load Balancers (picking a random server), Game Logic (random loot drops)."
+      },
+      {
+        title: "Implementation",
+        content: "1. **List**: Gives O(1) `random.choice`.\n2. **Map**: Gives O(1) `lookup`.\nTo delete O(1), swap target with last element, then pop.",
+        codeNote: "Swap-and-Pop: The standard pattern for O(1) deletion in an array when order doesn't matter.",
+        relatedTopicLink: "py-lists",
+        code: `import random
+class RandomizedSet:
+    def __init__(self):
+        self.vals = []
+        self.pos = {}
+
+    def insert(self, val):
+        if val in self.pos: return False
+        self.vals.append(val)
+        self.pos[val] = len(self.vals) - 1
+        return True
+
+    def remove(self, val):
+        if val not in self.pos: return False
+        idx = self.pos[val]
+        last = self.vals[-1]
+        self.vals[idx] = last
+        self.pos[last] = idx
+        self.vals.pop()
+        del self.pos[val]
+        return True
+
+    def getRandom(self):
+        return random.choice(self.vals)`
+      }
+    ]
+  },
+  {
+    id: "prob-time-kv",
+    category: "Solved Problems",
+    title: "Time Based Key-Value Store",
+    description: "Store multiple values for the same key at different timestamps.",
+    sections: [
+      {
+        title: "The Task",
+        content: "set(key, value, timestamp) and get(key, timestamp)."
+      },
+      {
+        title: "Real World Application",
+        content: "Database Version Control (MVCC), Git."
+      },
+      {
+        title: "Implementation",
+        content: "Store values as a list of tuples `(timestamp, value)`. Use Binary Search.",
+        codeNote: "bisect_right: Finds the insertion point after all values <= target.",
+        relatedTopicLink: "py-dsa-sorting",
+        code: `from collections import defaultdict
+import bisect
+
+class TimeMap:
+    def __init__(self):
+        self.store = defaultdict(list)
+
+    def set(self, key, value, timestamp):
+        self.store[key].append((timestamp, value))
+
+    def get(self, key, timestamp):
+        values = self.store.get(key, [])
+        if not values: return ""
+        i = bisect.bisect_right(values, (timestamp, chr(127)))
+        if i == 0: return ""
+        return values[i-1][1]`
+      }
+    ]
+  },
+  {
+    id: "prob-course-schedule",
+    category: "Solved Problems",
+    title: "Course Schedule (Cycle Detection)",
+    description: "Can you finish all courses given these prerequisites?",
+    sections: [
+      {
+        title: "The Task",
+        content: "Detect if a graph has a cycle."
+      },
+      {
+        title: "Real World Application",
+        content: "Package Managers (npm/pip), Build Systems (Makefiles), Deadlock detection."
+      },
+      {
+        title: "Implementation",
+        content: "We use 3 states: Unvisited, Visiting, Visited.",
+        codeNote: "Cycle Detection: The 'visiting' set represents the current recursion path.",
+        relatedTopicLink: "py-dsa-trees",
+        code: `def canFinish(numCourses, prerequisites):
+    graph = [[] for _ in range(numCourses)]
+    for c, p in prerequisites: graph[c].append(p)
+    
+    state = [0] * numCourses
+    def has_cycle(node):
+        if state[node] == 1: return True
+        if state[node] == 2: return False
+        state[node] = 1
+        for n in graph[node]:
+            if has_cycle(n): return True
+        state[node] = 2
+        return False
+        
+    for i in range(numCourses):
+        if has_cycle(i): return False
+    return True`
+      }
+    ]
+  },
+  {
+    id: "prob-merge-intervals",
+    category: "Solved Problems",
+    title: "Merge Intervals",
+    description: "Given [1,3], [2,6], [8,10], return [1,6], [8,10].",
+    sections: [
+      {
+        title: "The Task",
+        content: "Merge overlapping intervals."
+      },
+      {
+        title: "Real World Application",
+        content: "Calendar apps (finding free time), Memory management chunks."
+      },
+      {
+        title: "Implementation",
+        content: "Sort by START time. Iterate and merge.",
+        codeNote: "Sorting is Key: Without sorting by start time, you cannot merge in a single pass (O(N log N)).",
+        relatedTopicLink: "py-dsa-sorting",
+        code: `def merge(intervals):
+    intervals.sort(key=lambda x: x[0])
+    merged = []
+    for i in intervals:
+        if not merged or i[0] > merged[-1][1]:
+            merged.append(i)
+        else:
+            merged[-1][1] = max(merged[-1][1], i[1])
+    return merged`
       }
     ]
   }
