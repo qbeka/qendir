@@ -1652,5 +1652,252 @@ class AutoComplete:
             self._dfs(child_node, current_word + char, results)`
       }
     ]
+  },
+  {
+    id: "prob-boolean-logic",
+    category: "Solved Problems",
+    title: "Boolean Logic Engine",
+    description: "Evaluating complex nested logical rules against a dataset. A recursive descent problem.",
+    sections: [
+      {
+        title: "The Challenge",
+        content: "You have a set of rules defined in JSON/Dict format and a data object. Evaluate if the data satisfies the rules.\n\n**Rule Format:**\n- `{ 'op': 'AND', 'rules': [...] }`\n- `{ 'op': 'OR', 'rules': [...] }`\n- `{ 'op': 'NOT', 'rule': {...} }`\n- `{ 'op': 'EQ', 'key': 'age', 'value': 18 }`\n\n**Goal:** `evaluate(rule, data) -> bool`"
+      },
+      {
+        title: "Mental Model: The Syntax Tree",
+        content: "Logic expressions form a tree. `AND` and `OR` are nodes with children. `EQ` and `GT` are leaf nodes. \n- `AND` means *ALL* children must be True.\n- `OR` means *ANY* child must be True.\n- `NOT` means the child must be False.\n\nThis screams **Recursion**."
+      },
+      {
+        title: "Implementation: Recursive Dispatch",
+        content: "We create a dispatcher function that checks the `op` field and routes to the correct logic or recursively calls itself.",
+        codeNote: "Recursion Pattern: Base cases are the comparisons (EQ, GT). Recursive steps are the logic gates (AND, OR). This structure allows infinite nesting.",
+        relatedTopicLink: "pattern-validator",
+        code: `def evaluate(rule, data):
+    op = rule.get('op')
+
+    # Base Cases (Leaf Nodes)
+    if op == 'EQ':
+        return data.get(rule['key']) == rule['value']
+    if op == 'GT':
+        return data.get(rule['key']) > rule['value']
+    
+    # Recursive Cases (Logic Gates)
+    if op == 'AND':
+        # Return True only if ALL sub-rules are True
+        return all(evaluate(sub, data) for sub in rule['rules'])
+    
+    if op == 'OR':
+        # Return True if AT LEAST ONE sub-rule is True
+        return any(evaluate(sub, data) for sub in rule['rules'])
+    
+    if op == 'NOT':
+        # Invert the result of the child rule
+        return not evaluate(rule['rule'], data)
+        
+    return False`
+      }
+    ]
+  },
+  {
+    id: "prob-reactive-sheet",
+    category: "Solved Problems",
+    title: "Reactive Spreadsheet (Mini-Excel)",
+    description: "A spreadsheet engine that handles formula parsing, dependency tracking, and automatic updates.",
+    sections: [
+      {
+        title: "The Challenge",
+        content: "Implement a class `Sheet` with:\n1. `set_cell(id, content)`: Content can be a value (`10`) or formula (`=A1+B1`).\n2. `get_cell(id)`: Returns the evaluated value.\n\n**Constraint:** If A1 depends on B1, and B1 updates, A1 must update. Detect Circular Dependencies (`A1=B1`, `B1=A1`)."
+      },
+      {
+        title: "Data Structure: Dependency Graph",
+        content: "We need two graphs:\n1. **Graph (Dependencies)**: `A -> [B, C]` means A depends on B and C. Used for Topological Sort (Order of evaluation).\n2. **Reverse Graph (Dependents)**: `B -> [A]` means B affects A. Used to trigger updates.\n\nWe also need a `Cells` dict to store raw formulas and values."
+      },
+      {
+        title: "Cycle Detection (DFS)",
+        content: "Before setting a formula `A = B + C`, we must check if setting A to depend on B creates a cycle. We do a temporary DFS starting from B to see if we reach A.",
+        codeNote: "Cycle Detection: In a directed graph, a cycle exists if you revisit a node currently in the recursion stack.",
+        relatedTopicLink: "py-dsa-trees",
+        code: `def has_cycle(graph, start, target):
+    # DFS to see if 'start' eventually points to 'target'
+    stack = [start]
+    visited = set()
+    while stack:
+        node = stack.pop()
+        if node == target: return True
+        if node in visited: continue
+        visited.add(node)
+        for neighbor in graph.get(node, []):
+            stack.append(neighbor)
+    return False`
+      },
+      {
+        title: "Implementation",
+        content: "The `set_cell` method orchestrates the logic: Parse -> Check Cycle -> Update Graph -> Evaluate.",
+        codeNote: "Topological Update: When a cell changes, we only re-evaluate its dependents. Using a recursive 'get' with memoization is a lazy way to do this.",
+        relatedTopicLink: "prob-spreadsheet",
+        code: `class Sheet:
+    def __init__(self):
+        self.cells = {}   # id -> raw_content
+        self.values = {}  # id -> evaluated_value
+        self.graph = {}   # id -> [dependencies] (Who I need)
+        
+    def set_cell(self, cell_id, content):
+        # 1. Parse Dependencies (Simplified for demo)
+        # Assume content "=A1+B1" -> deps=["A1", "B1"]
+        deps = []
+        if isinstance(content, str) and content.startswith("="):
+            deps = [part for part in content[1:].split("+") if part.isalpha()]
+            
+        # 2. Check Cycles
+        for dep in deps:
+            if has_cycle(self.graph, dep, cell_id):
+                raise ValueError("Cycle detected!")
+                
+        # 3. Update State
+        self.cells[cell_id] = content
+        self.graph[cell_id] = deps
+        
+        # 4. Re-evaluate (eager propagation)
+        # In a real system, we might use Topological Sort here.
+        # For simplicity, we clear cache or re-calc.
+        self.evaluate(cell_id)
+
+    def evaluate(self, cell_id):
+        # Recursive evaluation logic
+        content = self.cells.get(cell_id)
+        if not isinstance(content, str) or not content.startswith("="):
+            return content
+            
+        # Calculate formula
+        # This needs to be robust (handle ints, etc)
+        total = 0
+        for dep in self.graph[cell_id]:
+            total += self.evaluate(dep)
+        return total`
+      }
+    ]
+  },
+  {
+    id: "prob-wildcard-pubsub",
+    category: "Solved Problems",
+    title: "Wildcard Pub/Sub",
+    description: "A messaging system where subscribers can use wildcards (`*`) to match multiple topics.",
+    sections: [
+      {
+        title: "The Challenge",
+        content: "1. `subscribe(pattern)`: Pattern can be `sports.tennis` or `sports.*` or `*.tennis`.\n2. `publish(topic)`: `publish('sports.tennis')` should notify both `sports.tennis` AND `sports.*` subscribers.\n\n*Standard Hash Maps don't work here because of the wildcard.*"
+      },
+      {
+        title: "Solution: The Trie (Prefix Tree)",
+        content: "We build a Trie where each level is a topic part. \n- Root -> 'sports' -> 'tennis'.\n- Wildcards (`*`) are treated as special nodes that match *anything* at that level.\n\nWhen publishing `a.b`, we traverse the Trie. At node `a`, we go to child `b` AND child `*`."
+      },
+      {
+        title: "Implementation",
+        content: "A recursive `match` function is key. It branches out to multiple paths in the Trie.",
+        codeNote: "Trie Branching: Normal Tries follow one path. Wildcard Tries fork into multiple paths (Specific Match + Wildcard Match).",
+        relatedTopicLink: "prob-autocomplete",
+        code: `class Node:
+    def __init__(self):
+        self.children = {}
+        self.subs = [] # Subscribers at this node
+
+class PubSub:
+    def __init__(self):
+        self.root = Node()
+
+    def subscribe(self, pattern, callback):
+        node = self.root
+        for part in pattern.split('.'):
+            if part not in node.children:
+                node.children[part] = Node()
+            node = node.children[part]
+        node.subs.append(callback)
+
+    def publish(self, topic, message):
+        # Start recursive matching
+        self._match(self.root, topic.split('.'), 0, message)
+
+    def _match(self, node, parts, index, msg):
+        # Base Case: End of topic
+        if index == len(parts):
+            for sub in node.subs: sub(msg)
+            return
+
+        current_part = parts[index]
+
+        # 1. Exact Match
+        if current_part in node.children:
+            self._match(node.children[current_part], parts, index+1, msg)
+
+        # 2. Wildcard Match (*)
+        if '*' in node.children:
+            self._match(node.children['*'], parts, index+1, msg)`
+      }
+    ]
+  },
+  {
+    id: "prob-task-scheduler",
+    category: "Solved Problems",
+    title: "Task Scheduler (Dependencies & Retries)",
+    description: "Executing a graph of tasks with retries on failure. Combines Graph Traversal with State Management.",
+    sections: [
+      {
+        title: "The Challenge",
+        content: "You have a list of tasks. Some depend on others (`A -> B`). \n- Tasks must run in order (Topological).\n- If a task fails, retry it up to 3 times.\n- If it fails 3 times, mark as FAILED and stop dependent tasks."
+      },
+      {
+        title: "Strategy: Kahn's Algorithm (BFS)",
+        content: "1. Calculate `indegree` (number of parents) for each task.\n2. Add tasks with `indegree == 0` to a **Queue** (Ready to run).\n3. Loop while Queue is not empty:\n    - Run task.\n    - If Success: Decrement neighbors' indegree. Add to Queue if 0.\n    - If Fail: Decrement retries. Add back to Queue if > 0."
+      },
+      {
+        title: "Implementation",
+        content: "We simulate the execution loop. In a real system, this would be async.",
+        codeNote: "Indegree Tracking: This is the standard way to handle dependency resolution iteratively. It allows parallelism (all items in Queue can run at once).",
+        relatedTopicLink: "py-dsa-trees",
+        code: `from collections import deque, defaultdict
+
+def run_tasks(tasks, dependencies):
+    # 1. Build Graph & Indegree
+    graph = defaultdict(list)
+    indegree = {t: 0 for t in tasks}
+    retries = {t: 3 for t in tasks}
+    
+    for parent, child in dependencies:
+        graph[parent].append(child)
+        indegree[child] += 1
+        
+    # 2. Initialize Queue (Ready tasks)
+    queue = deque([t for t in tasks if indegree[t] == 0])
+    results = []
+
+    while queue:
+        task = queue.popleft()
+        
+        # Simulate execution (random fail for demo)
+        success = execute(task) 
+        
+        if success:
+            results.append(task)
+            # Unlock neighbors
+            for neighbor in graph[task]:
+                indegree[neighbor] -= 1
+                if indegree[neighbor] == 0:
+                    queue.append(neighbor)
+        else:
+            # Handle Failure
+            if retries[task] > 0:
+                print(f"Retrying {task}...")
+                retries[task] -= 1
+                queue.append(task) # Re-queue immediately
+            else:
+                print(f"Task {task} Failed permanently.")
+                # We do NOT add neighbors, so they never run.
+                
+    return results
+
+def execute(task):
+    return True # Mock`
+      }
+    ]
   }
 ];
