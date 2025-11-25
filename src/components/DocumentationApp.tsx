@@ -212,7 +212,7 @@ export default function DocumentationApp() {
         <div className="p-6 border-b border-neutral-100">
           <div className="flex items-center gap-3">
             <div>
-              <h1 className="font-bold text-lg tracking-tight text-neutral-900">QenDir</h1>
+              <h1 className="font-bold text-lg tracking-tight text-neutral-900">Qendrim's Directory</h1>
             </div>
           </div>
         </div>

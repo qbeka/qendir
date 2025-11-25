@@ -1432,7 +1432,7 @@ class LogSystem:
     sections: [
       {
         title: "The Challenge",
-        content: "1. `set_cell(id, formula)`: e.g., `set("A1", "B1+C1")`\n2. `get_cell(id)`: Returns evaluated value.\n3. If B1 changes, A1 must update automatically."
+        content: "1. \`set_cell(id, formula)\`: e.g., \`set('A1', 'B1+C1')\`\\n2. \`get_cell(id)\`: Returns evaluated value.\\n3. If B1 changes, A1 must update automatically."
       },
       {
         title: "Data Structure: The Directed Graph",
@@ -1479,6 +1479,152 @@ class LogSystem:
             
         visiting.remove(cell_id)
         return result`
+      }
+    ]
+  },
+  {
+    id: "prob-url-shortener",
+    category: "Solved Problems",
+    title: "URL Shortener (System Design)",
+    description: "Convert Long URLs to Short Codes (bit.ly) and back. A classic System Design + Algo question.",
+    sections: [
+      {
+        title: "The Challenge",
+        content: "Design a class with:\n1. `shorten(long_url) -> short_url`\n2. `redirect(short_url) -> long_url`\n\nThe short code should be alphanumeric and as short as possible (e.g., 6 chars)."
+      },
+      {
+        title: "The Math: Base62 Encoding",
+        content: "We need to map a unique Integer ID (database ID) to a short string. \n- Characters: `a-z`, `A-Z`, `0-9` = 62 chars.\n- This is Base62 conversion (like Binary is Base2, Hex is Base16).\n- Algorithm: `while num > 0: remainder = num % 62; char = map[remainder]; num //= 62`."
+      },
+      {
+        title: "Implementation",
+        code: `class URLShortener:
+    def __init__(self):
+        self.id_counter = 1
+        self.url_map = {} # { id: long_url }
+        self.chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+    def shorten(self, long_url):
+        # 1. Get unique ID
+        curr_id = self.id_counter
+        self.id_counter += 1
+        self.url_map[curr_id] = long_url
+        
+        # 2. Base62 Encode
+        short_code = []
+        while curr_id > 0:
+            curr_id, rem = divmod(curr_id, 62)
+            short_code.append(self.chars[rem])
+        
+        return "http://sho.rt/" + "".join(reversed(short_code))
+
+    def redirect(self, short_url):
+        # 1. Extract code
+        code = short_url.split("/")[-1]
+        
+        # 2. Base62 Decode
+        curr_id = 0
+        for char in code:
+            curr_id = curr_id * 62 + self.chars.index(char)
+            
+        return self.url_map.get(curr_id)`
+      }
+    ]
+  },
+  {
+    id: "prob-circular-buffer",
+    category: "Solved Problems",
+    title: "Circular Buffer (Ring Buffer)",
+    description: "A fixed-size buffer that overwrites old data when full. Crucial for streaming data.",
+    sections: [
+      {
+        title: "The Challenge",
+        content: "Implement a Buffer of size N with:\n1. `write(val)`: Adds data. If full, overwrite oldest.\n2. `read()`: Read oldest unread data."
+      },
+      {
+        title: "The Pointer Strategy",
+        content: "We need a fixed array `[None] * N` and two pointers:\n- `head`: Where to write next.\n- `tail`: Where to read next.\n- `count`: How many items are currently stored.\n\nUsing modulo `% N` wraps the pointers around the end."
+      },
+      {
+        title: "Implementation",
+        code: `class RingBuffer:
+    def __init__(self, capacity):
+        self.cap = capacity
+        self.buffer = [None] * capacity
+        self.head = 0 # Write pointer
+        self.tail = 0 # Read pointer
+        self.size = 0
+
+    def write(self, val):
+        self.buffer[self.head] = val
+        self.head = (self.head + 1) % self.cap
+        if self.size < self.cap:
+            self.size += 1
+        else:
+            # We overwrote the oldest data, so tail must move too
+            self.tail = (self.tail + 1) % self.cap
+
+    def read(self):
+        if self.size == 0: return None
+        val = self.buffer[self.tail]
+        self.tail = (self.tail + 1) % self.cap
+        self.size -= 1
+        return val`
+      }
+    ]
+  },
+  {
+    id: "prob-autocomplete",
+    category: "Solved Problems",
+    title: "AutoComplete System (Trie)",
+    description: "Suggest completions for a prefix. 'Goog' -> ['Google', 'Google Maps'].",
+    sections: [
+      {
+        title: "The Challenge",
+        content: "1. `insert(word)`: Add a word to the dictionary.\n2. `search(prefix)`: Return all words starting with prefix."
+      },
+      {
+        title: "Data Structure: Trie (Prefix Tree)",
+        content: "A Trie is a tree where each node is a character. Paths from root form words. \n- Optimized for prefix lookups.\n- We flag nodes that mark the `end_of_word`."
+      },
+      {
+        title: "Implementation",
+        code: `class TrieNode:
+    def __init__(self):
+        self.children = {}
+        self.is_end = False
+
+class AutoComplete:
+    def __init__(self):
+        self.root = TrieNode()
+
+    def insert(self, word):
+        node = self.root
+        for char in word:
+            if char not in node.children:
+                node.children[char] = TrieNode()
+            node = node.children[char]
+        node.is_end = True
+
+    def search(self, prefix):
+        # 1. Find the node for the prefix
+        node = self.root
+        for char in prefix:
+            if char not in node.children:
+                return [] # Prefix not found
+            node = node.children[char]
+        
+        # 2. Collect all words from this node downwards
+        results = []
+        self._dfs(node, prefix, results)
+        return results
+
+    def _dfs(self, node, current_word, results):
+        if node.is_end:
+            results.append(current_word)
+        
+        for char, child_node in node.children.items():
+            self._dfs(child_node, current_word + char, results)`
       }
     ]
   }
