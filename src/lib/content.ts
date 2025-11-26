@@ -536,7 +536,7 @@ data.sort(key=lambda x: x[1])`
         code: `class Dog:
     def __init__(self, name):
         self.name = name # Stores 'name' in the instance
-
+        
     def bark(self):
         # We need 'self' to find out OUR name
         print(self.name + " says Woof!")`
@@ -801,7 +801,7 @@ head.next = ListNode(2)`
   {
     id: "py-dsa-trees",
     category: "Python DSA",
-    title: "Trees & Graphs",
+    title: "Trees & Graphs (Expanded)",
     description: "Hierarchical data structures. Most 'Hard' interview problems involve Graphs or Trees.",
     sections: [
       {
@@ -856,8 +856,8 @@ def inorder(root):
         tip: "When initializing a graph from a list of edges (like `[[0,1], [1,2]]`), use `defaultdict(list)` to avoid checking if keys exist."
       },
       {
-        title: "BFS vs DFS (Crucial)",
-        content: "- **BFS**: Uses a **Queue**. Finds the *shortest path* in unweighted graphs. Explores neighbors first.\n- **DFS**: Uses a **Stack** (or Recursion). Good for exhaustive search (mazes, puzzles) or checking connectivity.",
+        title: "BFS vs DFS (Deep Dive)",
+        content: "Understanding when to use which is critical.\n\n**BFS (Breadth-First Search)**\n- **Data Structure**: Queue (FIFO).\n- **Use Case**: Finding the *shortest path* in unweighted graphs. Level-order traversal.\n- **Visual**: Ripples in a pond spreading out.\n\n**DFS (Depth-First Search)**\n- **Data Structure**: Stack (LIFO) or Recursion.\n- **Use Case**: Exhaustive search (mazes, puzzles), Topological Sort, Cycle Detection, Connectivity check.\n- **Visual**: Walking a maze, hitting a wall, backtracking.",
         code: `# BFS Skeleton
 def bfs(start_node):
     queue = deque([start_node])
@@ -870,7 +870,16 @@ def bfs(start_node):
         for neighbor in graph[curr]:
             if neighbor not in visited:
                 visited.add(neighbor)
-                queue.append(neighbor)`
+                queue.append(neighbor)
+
+# DFS Skeleton (Recursive)
+def dfs(node, visited):
+    if node in visited: return
+    visited.add(node)
+    print(node)
+    
+    for neighbor in graph[node]:
+        dfs(neighbor, visited)`
       }
     ]
   },
@@ -1255,7 +1264,7 @@ my_lunch = (PizzaBuilder()
       {
         title: "Final Code Assembly",
         content: "Combining all pieces into a robust solution.",
-        codeNote: "Review Recursion: We pass 'path' down every call to build the error trace.",
+        codeNote: "Review Recursion: We pass 'path' down every call to build the error trace. Time Complexity: O(N) where N is total nodes in data/schema.",
         relatedTopicLink: "pattern-validator",
         code: `def validate(schema, data, path="root"):
     def fail(msg): return {"valid": False, "error": msg, "path": path}
@@ -1321,8 +1330,6 @@ my_lunch = (PizzaBuilder()
       {
         title: "The Stack Solution",
         content: "- Global `store` dictionary for committed data.\n- `stack` list for temporary transactions.\n\nWhen `begin()` is called, we push a new empty `{}` to the stack. \nWhen `set(k,v)` is called, we write to the TOP of the stack (`stack[-1]`).",
-        codeNote: "Stack (LIFO): Last-In, First-Out. Using a stack allows us to isolate transaction layers.",
-        relatedTopicLink: "py-dsa-linear",
         code: `class KVStore:
     def __init__(self):
         self.store = {} # Permanent
@@ -1351,7 +1358,7 @@ my_lunch = (PizzaBuilder()
       {
         title: "Commit & Rollback",
         content: "Rollback is easy: Just pop the stack! \nCommit is harder: We must merge all stack layers into the permanent store.",
-        codeNote: "Stack Operation: Pop is O(1). Merge is O(N*K) where N is stack depth.",
+        codeNote: "Stack Operation: Pop is O(1). Merge is O(N*K) where N is stack depth. Get is O(N) where N is stack depth.",
         relatedTopicLink: "py-dsa-linear",
         code: `    def rollback(self):
         if self.stack:
@@ -1397,7 +1404,7 @@ my_lunch = (PizzaBuilder()
       {
         title: "Implementation",
         content: "We use `bisect` to find the start and end indices in O(log N).",
-        codeNote: "Bisect is Python's Binary Search. bisect_left finds the first insertion point. Crucial for Range Queries.",
+        codeNote: "Bisect is Python's Binary Search. bisect_left finds the first insertion point. Time: O(log N) search, O(1) append (amortized).",
         relatedTopicLink: "py-dsa-sorting",
         code: `from collections import defaultdict
 import bisect
@@ -1445,7 +1452,7 @@ class LogSystem:
       {
         title: "Implementation",
         content: "We use `split` with a limit to separate headers from body, then parse line by line.",
-        codeNote: "String Splitting: Using maxsplit=1 is a pro move to avoid splitting the body if it contains the delimiter.",
+        codeNote: "String Splitting: Using maxsplit=1 is a pro move to avoid splitting the body if it contains the delimiter. Time: O(N) where N is string length.",
         relatedTopicLink: "py-strings",
         code: `def parse_http(raw_req):
     if not raw_req: return None
@@ -1484,7 +1491,7 @@ class LogSystem:
     sections: [
       {
         title: "The Challenge",
-        content: "1. \`set_cell(id, formula)\`: e.g., \`set('A1', 'B1+C1')\`\\n2. \`get_cell(id)\`: Returns evaluated value.\\n3. If B1 changes, A1 must update automatically."
+        content: "1. `set_cell(id, formula)`: e.g., `set('A1', 'B1+C1')`\n2. `get_cell(id)`: Returns evaluated value.\n3. If B1 changes, A1 must update automatically."
       },
       {
         title: "Data Structure: The Directed Graph",
@@ -1497,6 +1504,8 @@ class LogSystem:
       {
         title: "Simplified Implementation (Recursive Eval)",
         content: "For an interview, start with recursive evaluation with loop detection.",
+        codeNote: "Recursion with Memoization: Avoids re-calculating the same cell. Time: O(V+E) where V is cells, E is dependencies.",
+        relatedTopicLink: "py-dsa-trees",
         code: `class Spreadsheet:
     def __init__(self):
         self.cells = {} # { "A1": 10, "B1": "A1+5" }
@@ -1551,7 +1560,7 @@ class LogSystem:
       {
         title: "Implementation",
         content: "We maintain an ID counter and a map. We encode the ID to Base62 for the short code.",
-        codeNote: "Base62 Encoding: Maps an integer ID to a short string. Essential for URL shorteners to keep URLs short.",
+        codeNote: "Base62 Encoding: Maps an integer ID to a short string. Time: O(log62 N). Space: O(1) for algo, O(N) for storage.",
         relatedTopicLink: "py-strings",
         code: `class URLShortener:
     def __init__(self):
@@ -1603,7 +1612,7 @@ class LogSystem:
       {
         title: "Implementation",
         content: "We overwrite `buffer[head]` and move head. If buffer was full, we also move tail to 'forget' the oldest value.",
-        codeNote: "Modulo Arithmetic: `(ptr + 1) % N` creates the circular behavior without `if ptr == N` checks.",
+        codeNote: "Modulo Arithmetic: `(ptr + 1) % N` creates the circular behavior. Time: O(1) for both read/write. Space: O(N).",
         relatedTopicLink: "py-operators",
         code: `class RingBuffer:
     def __init__(self, capacity):
@@ -1648,7 +1657,7 @@ class LogSystem:
       {
         title: "Implementation",
         content: "The implementation uses a recursive or iterative approach to insert and search.",
-        codeNote: "Trie Node: A dict of children + a boolean flag. We traverse char by char.",
+        codeNote: "Trie Node: A dict of children + a boolean flag. Time: O(L) for insert/search where L is word length. Space: O(Total Characters).",
         relatedTopicLink: "py-dsa-trees",
         code: `class TrieNode:
     def __init__(self):
@@ -1700,7 +1709,7 @@ class Trie:
       {
         title: "Implementation",
         content: "We walk down the Trie using the prefix. If we find the node, we run DFS from there to find all children marked `is_end`.",
-        codeNote: "Trie Traversal: Searching a prefix is O(L) where L is prefix length. DFS is O(V) where V is number of descendants.",
+        codeNote: "Trie Traversal: Searching a prefix is O(L) where L is prefix length. DFS is O(V) where V is number of descendants. Space: O(Total Chars).",
         relatedTopicLink: "py-dsa-trees",
         code: `class TrieNode:
     def __init__(self):
@@ -1758,7 +1767,7 @@ class AutoComplete:
       {
         title: "Implementation: Recursive Dispatch",
         content: "We create a dispatcher function that checks the `op` field and routes to the correct logic or recursively calls itself.",
-        codeNote: "Recursion Pattern: Base cases are the comparisons (EQ, GT). Recursive steps are the logic gates (AND, OR). This structure allows infinite nesting.",
+        codeNote: "Recursion Pattern: Base cases are the comparisons (EQ, GT). Recursive steps are the logic gates (AND, OR). Time: O(N) where N is number of rules.",
         relatedTopicLink: "pattern-validator",
         code: `def evaluate(rule, data):
     op = rule.get('op')
@@ -1803,7 +1812,7 @@ class AutoComplete:
       {
         title: "Cycle Detection (DFS)",
         content: "Before setting a formula `A = B + C`, we must check if setting A to depend on B creates a cycle. We do a temporary DFS starting from B to see if we reach A.",
-        codeNote: "Cycle Detection: In a directed graph, a cycle exists if you revisit a node currently in the recursion stack.",
+        codeNote: "Cycle Detection: DFS to detect back edges. Time: O(V+E) where V is cells, E is dependencies.",
         relatedTopicLink: "py-dsa-trees",
         code: `def has_cycle(graph, start, target):
     # DFS to see if 'start' eventually points to 'target'
@@ -1821,7 +1830,7 @@ class AutoComplete:
       {
         title: "Implementation",
         content: "The `set_cell` method orchestrates the logic: Parse -> Check Cycle -> Update Graph -> Evaluate.",
-        codeNote: "Topological Update: When a cell changes, we only re-evaluate its dependents. Using a recursive 'get' with memoization is a lazy way to do this.",
+        codeNote: "Topological Update: When a cell changes, we only re-evaluate its dependents. Using a recursive 'get' with memoization is a lazy way to do this. Time: O(V+E).",
         relatedTopicLink: "prob-spreadsheet",
         code: `class Sheet:
     def __init__(self):
@@ -1882,7 +1891,7 @@ class AutoComplete:
       {
         title: "Implementation",
         content: "A recursive `match` function is key. It branches out to multiple paths in the Trie.",
-        codeNote: "Trie Branching: Normal Tries follow one path. Wildcard Tries fork into multiple paths (Specific Match + Wildcard Match).",
+        codeNote: "Trie Branching: Recursive match handles wildcards by exploring multiple paths. Time: O(K^L) worst case with wildcards, usually O(L) where L is topic length.",
         relatedTopicLink: "prob-autocomplete",
         code: `class Node:
     def __init__(self):
@@ -1940,7 +1949,7 @@ class PubSub:
       {
         title: "Implementation",
         content: "We simulate the execution loop. In a real system, this would be async.",
-        codeNote: "Indegree Tracking: This is the standard way to handle dependency resolution iteratively. It allows parallelism (all items in Queue can run at once).",
+        codeNote: "Indegree Tracking: Kahn's Algorithm for Topological Sort. Time: O(V+E). Space: O(V+E) for graph.",
         relatedTopicLink: "py-dsa-trees",
         code: `from collections import deque, defaultdict
 
@@ -1990,7 +1999,7 @@ def execute(task):
   },
 
   // =========================================
-  // RESTORED & UPDATED PRACTICAL PROBLEMS
+  // ADDITIONAL PRACTICAL PROBLEMS (THE GAUNTLET)
   // =========================================
   {
     id: "prob-lru-cache",
@@ -2009,7 +2018,7 @@ def execute(task):
       {
         title: "Implementation Strategy",
         content: "We maintain a Doubly Linked List. \n- **Head**: Most Recently Used (MRU).\n- **Tail**: Least Recently Used (LRU).\n- `get(key)`: Move node to Head.\n- `put(key)`: Create/Update node, move to Head. If full, remove Tail.",
-        codeNote: "OrderedDict: Python's 'collections.OrderedDict' actually implements this exact logic internally. In an interview, ask if you can use it. If not, build the DLL manually.",
+        codeNote: "OrderedDict: Python's 'collections.OrderedDict' actually implements this exact logic internally. Time: O(1) for all ops. Space: O(N).",
         relatedTopicLink: "py-dsa-linear",
         code: `class Node:
     def __init__(self, key=0, val=0):
@@ -2078,7 +2087,7 @@ class LRUCache:
       {
         title: "Implementation (Queue)",
         content: "This is sufficient for most interviews. `deque` allows O(1) pops from the left.",
-        codeNote: "Memory Cleanup: Notice the while loop. It acts as a garbage collector, keeping only relevant data in memory. This prevents memory leaks in long-running systems.",
+        codeNote: "Memory Cleanup: The while loop acts as garbage collection. Time: O(1) amortized. Space: O(N) where N is hits in last 5 mins.",
         relatedTopicLink: "py-dsa-linear",
         code: `from collections import deque
 
@@ -2114,7 +2123,7 @@ class HitCounter:
       {
         title: "Implementation",
         content: "Pay attention to how we construct multi-digit numbers.",
-        codeNote: "Deferred Execution: We don't perform + or - immediately. We push them to the stack. We only execute * and / immediately. The final sum() handles the low-priority ops.",
+        codeNote: "Deferred Execution: Storing '+' and '-' to execute later via sum() is a key stack pattern. Time: O(N). Space: O(N).",
         relatedTopicLink: "py-dsa-linear",
         code: `def calculate(s):
     if not s: return 0
@@ -2159,7 +2168,7 @@ class HitCounter:
       {
         title: "Implementation",
         content: "1. Split by `/`.\n2. Iterate tokens.\n3. If `..`, pop stack (if not empty).\n4. If `.` or empty, skip.\n5. Else, push.",
-        codeNote: "String Splitting: split('/') handles the multiple slashes automatically by creating empty strings, which we filter out.",
+        codeNote: "String Splitting: Handling empty tokens from split is crucial. Time: O(N). Space: O(N).",
         relatedTopicLink: "py-strings",
         code: `def simplifyPath(path):
     stack = []
@@ -2193,7 +2202,7 @@ class HitCounter:
       {
         title: "Implementation (Stack)",
         content: "We keep a stack of *NestedIntegers* (lists).",
-        codeNote: "Stack for Nesting: The stack represents the 'current depth'. stack[-1] is the list we are currently filling.",
+        codeNote: "Stack for Nesting: stack[-1] is always the 'current container'. Time: O(N). Space: O(N).",
         relatedTopicLink: "py-dsa-linear",
         code: `def deserialize(s):
     if s[0] != '[': return int(s)
@@ -2239,7 +2248,7 @@ class HitCounter:
       {
         title: "Implementation",
         content: "1. **List**: Gives O(1) `random.choice`.\n2. **Map**: Gives O(1) `lookup`.\nTo delete O(1), swap target with last element, then pop.",
-        codeNote: "Swap-and-Pop: The standard pattern for O(1) deletion in an array when order doesn't matter.",
+        codeNote: "Swap-and-Pop: The only way to delete from an array in O(1) is from the end. Time: O(1) all ops. Space: O(N).",
         relatedTopicLink: "py-lists",
         code: `import random
 class RandomizedSet:
@@ -2285,7 +2294,7 @@ class RandomizedSet:
       {
         title: "Implementation",
         content: "Store values as a list of tuples `(timestamp, value)`. Use Binary Search.",
-        codeNote: "bisect_right: Finds the insertion point after all values <= target.",
+        codeNote: "Binary Search (bisect): Necessary for O(log N) lookup in time series data. Space: O(N).",
         relatedTopicLink: "py-dsa-sorting",
         code: `from collections import defaultdict
 import bisect
@@ -2323,7 +2332,7 @@ class TimeMap:
       {
         title: "Implementation",
         content: "We use 3 states: Unvisited, Visiting, Visited.",
-        codeNote: "Cycle Detection: The 'visiting' set represents the current recursion path.",
+        codeNote: "3-Color DFS: Standard algorithm for detecting cycles in directed graphs. Time: O(V+E). Space: O(V).",
         relatedTopicLink: "py-dsa-trees",
         code: `def canFinish(numCourses, prerequisites):
     graph = [[] for _ in range(numCourses)]
@@ -2362,7 +2371,7 @@ class TimeMap:
       {
         title: "Implementation",
         content: "Sort by START time. Iterate and merge.",
-        codeNote: "Sorting is Key: Without sorting by start time, you cannot merge in a single pass (O(N log N)).",
+        codeNote: "Sorting is Key: Enables O(N) one-pass merging. Total Time: O(N log N). Space: O(N).",
         relatedTopicLink: "py-dsa-sorting",
         code: `def merge(intervals):
     intervals.sort(key=lambda x: x[0])
@@ -2373,6 +2382,51 @@ class TimeMap:
         else:
             merged[-1][1] = max(merged[-1][1], i[1])
     return merged`
+      }
+    ]
+  },
+  {
+    id: "prob-bst-ops",
+    category: "Solved Problems",
+    title: "BST Construction & Inversion",
+    description: "How to build a Binary Search Tree from a list and how to Invert it (The Google Joke Question).",
+    sections: [
+      {
+        title: "1. Create BST from Sorted Array",
+        content: "Given `[-10, -3, 0, 5, 9]`, create a height-balanced BST.\n- **Strategy**: Pick the middle element as Root. Recursively build Left subtree from left half, Right subtree from right half.",
+        code: `class TreeNode:
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left
+        self.right = right
+
+def sortedArrayToBST(nums):
+    if not nums: return None
+    
+    mid = len(nums) // 2
+    root = TreeNode(nums[mid])
+    
+    root.left = sortedArrayToBST(nums[:mid])
+    root.right = sortedArrayToBST(nums[mid+1:])
+    
+    return root`
+      },
+      {
+        title: "2. Invert Binary Tree",
+        content: "Swap every left child with its right child.\n- **Strategy**: Recursive DFS. `root.left, root.right = invert(root.right), invert(root.left)`.",
+        codeNote: "Homebrew Creator Max Howell was famously rejected by Google for not knowing this on a whiteboard.",
+        relatedTopicLink: "py-dsa-trees",
+        code: `def invertTree(root):
+    if not root: return None
+    
+    # Swap children
+    root.left, root.right = root.right, root.left
+    
+    # Recurse
+    invertTree(root.left)
+    invertTree(root.right)
+    
+    return root`
       }
     ]
   }
