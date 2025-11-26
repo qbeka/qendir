@@ -756,8 +756,559 @@ y = re.findall("ai", txt)`
   },
   
   // =========================================
-  // PYTHON DSA (EXPANDED)
+  // PYTHON SYNTAX - ADVANCED
   // =========================================
+  {
+    id: "py-decorators",
+    category: "Python Syntax",
+    title: "Decorators (@)",
+    description: "Functions that modify other functions. The '@' syntax is syntactic sugar for wrapping.",
+    sections: [
+      {
+        title: "What is a Decorator?",
+        content: "A decorator is a function that takes another function as input, adds some functionality, and returns a new function. The `@decorator` syntax is just shorthand for `func = decorator(func)`.",
+        code: `def my_decorator(func):
+    def wrapper(*args, **kwargs):
+        print("Before the function call")
+        result = func(*args, **kwargs)
+        print("After the function call")
+        return result
+    return wrapper
+
+@my_decorator
+def say_hello(name):
+    print(f"Hello, {name}")
+
+say_hello("Alice")
+# Output:
+# Before the function call
+# Hello, Alice
+# After the function call`
+      },
+      {
+        title: "Common Use Cases",
+        content: "- **@staticmethod**: Method that doesn't need `self`. Called on the class, not instance.\n- **@classmethod**: Method that gets the class (`cls`) instead of instance (`self`).\n- **@property**: Turn a method into a read-only attribute.\n- **Custom**: Logging, Timing, Authentication, Caching.",
+        code: `class Circle:
+    def __init__(self, radius):
+        self._radius = radius
+
+    @property
+    def area(self):
+        return 3.14 * self._radius ** 2
+
+    @staticmethod
+    def is_valid_radius(r):
+        return r > 0
+
+    @classmethod
+    def from_diameter(cls, d):
+        return cls(d / 2)
+
+c = Circle(5)
+print(c.area)  # 78.5 (No parentheses!)
+print(Circle.is_valid_radius(10))  # True
+c2 = Circle.from_diameter(10)  # Creates Circle with radius 5`
+      },
+      {
+        title: "Decorator with Arguments",
+        content: "To pass arguments to a decorator, you need an extra layer of nesting.",
+        code: `def repeat(times):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            for _ in range(times):
+                func(*args, **kwargs)
+        return wrapper
+    return decorator
+
+@repeat(3)
+def greet():
+    print("Hello!")
+
+greet()  # Prints "Hello!" 3 times`
+      }
+    ],
+    quiz: [
+      {
+        question: "What does @staticmethod do?",
+        options: ["Makes method faster", "Method doesn't need self", "Method is private", "Method is async"],
+        correctAnswer: 1
+      },
+      {
+        question: "What does @property do?",
+        options: ["Makes attribute private", "Turns method into attribute", "Validates input", "Caches result"],
+        correctAnswer: 1
+      }
+    ]
+  },
+  {
+    id: "py-generators",
+    category: "Python Syntax",
+    title: "Generators & Iterators",
+    description: "Memory-efficient way to work with large sequences. Uses 'yield' instead of 'return'.",
+    sections: [
+      {
+        title: "The Problem with Lists",
+        content: "If you have 1 billion numbers, creating a list `[0, 1, 2, ..., 999999999]` uses ~8GB of RAM. A Generator creates values *on-demand*, using almost no memory.",
+        code: `# ❌ Uses 8GB of RAM
+big_list = [x for x in range(1_000_000_000)]
+
+# ✅ Uses almost no RAM
+big_gen = (x for x in range(1_000_000_000))`
+      },
+      {
+        title: "The 'yield' Keyword",
+        content: "`yield` pauses the function and returns a value. When you call `next()`, it resumes from where it left off. The function's state (local variables) is preserved.",
+        code: `def count_up_to(n):
+    i = 1
+    while i <= n:
+        yield i  # Pause and return i
+        i += 1
+
+gen = count_up_to(3)
+print(next(gen))  # 1
+print(next(gen))  # 2
+print(next(gen))  # 3
+# next(gen) would raise StopIteration
+
+# Or just use a for loop
+for num in count_up_to(5):
+    print(num)`
+      },
+      {
+        title: "Generator Expressions",
+        content: "Like list comprehensions, but with `()` instead of `[]`. They are lazy-evaluated.",
+        code: `# List Comprehension (eager, creates list in memory)
+squares_list = [x*x for x in range(10)]
+
+# Generator Expression (lazy, creates values on demand)
+squares_gen = (x*x for x in range(10))
+
+# Common pattern: sum/max/min with generators
+total = sum(x*x for x in range(1000000))  # Memory efficient!`
+      }
+    ],
+    quiz: [
+      {
+        question: "What keyword creates a generator function?",
+        options: ["return", "yield", "generate", "async"],
+        correctAnswer: 1
+      },
+      {
+        question: "Why use generators over lists?",
+        options: ["Faster", "Memory efficient", "Thread safe", "Type safe"],
+        correctAnswer: 1
+      }
+    ]
+  },
+  {
+    id: "py-context-managers",
+    category: "Python Syntax",
+    title: "Context Managers (with)",
+    description: "Automatic setup and teardown. Guarantees cleanup even if errors occur.",
+    sections: [
+      {
+        title: "The 'with' Statement",
+        content: "You've seen `with open('file.txt') as f:`. This guarantees the file is closed even if an exception is raised. It's implemented using `__enter__` and `__exit__` methods.",
+        code: `# Without context manager (risky!)
+f = open('file.txt')
+try:
+    data = f.read()
+finally:
+    f.close()  # Must remember this!
+
+# With context manager (safe!)
+with open('file.txt') as f:
+    data = f.read()
+# File is ALWAYS closed here, even if read() throws an error`
+      },
+      {
+        title: "Creating Your Own",
+        content: "Use the `contextlib` module for a simple approach, or implement `__enter__` and `__exit__` for a class-based approach.",
+        code: `from contextlib import contextmanager
+import time
+
+@contextmanager
+def timer():
+    start = time.time()
+    yield  # Code inside 'with' block runs here
+    end = time.time()
+    print(f"Elapsed: {end - start:.2f}s")
+
+with timer():
+    # Do some work
+    sum(range(1000000))
+# Output: "Elapsed: 0.03s"`
+      },
+      {
+        title: "Common Use Cases",
+        content: "- File handling (`open`)\n- Database connections\n- Locks (`threading.Lock`)\n- Temporary changes (e.g., change directory, then go back)\n- Timing code execution"
+      }
+    ],
+    quiz: [
+      {
+        question: "What methods define a context manager class?",
+        options: ["__start__ and __stop__", "__enter__ and __exit__", "__open__ and __close__", "__begin__ and __end__"],
+        correctAnswer: 1
+      }
+    ]
+  },
+  {
+    id: "py-exceptions",
+    category: "Python Syntax",
+    title: "Exception Handling",
+    description: "Graceful error handling with try/except/finally/else.",
+    sections: [
+      {
+        title: "The Full Syntax",
+        content: "- `try`: Code that might fail.\n- `except`: Handle specific errors.\n- `else`: Runs ONLY if no exception occurred.\n- `finally`: ALWAYS runs (cleanup).",
+        code: `try:
+    result = 10 / 0
+except ZeroDivisionError as e:
+    print(f"Error: {e}")
+except Exception as e:
+    print(f"Some other error: {e}")
+else:
+    print("Success!")  # Only runs if no exception
+finally:
+    print("Cleanup")  # ALWAYS runs`
+      },
+      {
+        title: "Raising Exceptions",
+        content: "Use `raise` to throw your own errors. You can create custom exception classes.",
+        code: `def validate_age(age):
+    if age < 0:
+        raise ValueError("Age cannot be negative")
+    if age > 150:
+        raise ValueError("Age seems unrealistic")
+    return True
+
+# Custom Exception
+class InsufficientFundsError(Exception):
+    def __init__(self, balance, amount):
+        self.message = f"Cannot withdraw {amount}, balance is {balance}"
+        super().__init__(self.message)
+
+raise InsufficientFundsError(100, 200)`
+      },
+      {
+        title: "Best Practices",
+        content: "1. **Be Specific**: Catch `ValueError`, not `Exception`.\n2. **Don't Silence Errors**: Never use bare `except: pass`.\n3. **Use `else`**: Separates 'try' code from 'success' code.\n4. **Use `finally` for Cleanup**: Close files, release locks."
+      }
+    ],
+    quiz: [
+      {
+        question: "When does the 'else' block run?",
+        options: ["Always", "If exception occurs", "If NO exception occurs", "Never"],
+        correctAnswer: 2
+      },
+      {
+        question: "When does the 'finally' block run?",
+        options: ["Only on success", "Only on error", "Always", "Never"],
+        correctAnswer: 2
+      }
+    ]
+  },
+  {
+    id: "py-type-hints",
+    category: "Python Syntax",
+    title: "Type Hints & Annotations",
+    description: "Optional static typing for Python. Helps IDEs and linters catch bugs.",
+    sections: [
+      {
+        title: "Basic Syntax",
+        content: "Type hints are NOT enforced at runtime. They are documentation for developers and tools like `mypy`.",
+        code: `def greet(name: str) -> str:
+    return f"Hello, {name}"
+
+age: int = 25
+names: list[str] = ["Alice", "Bob"]
+scores: dict[str, int] = {"Alice": 100, "Bob": 90}`
+      },
+      {
+        title: "Optional & Union",
+        content: "Use `Optional` for values that can be `None`. Use `Union` for multiple types.",
+        code: `from typing import Optional, Union
+
+def find_user(id: int) -> Optional[str]:
+    # Returns str or None
+    if id == 1:
+        return "Alice"
+    return None
+
+def process(data: Union[str, int]) -> str:
+    # Accepts str or int
+    return str(data)
+
+# Python 3.10+ shorthand
+def process_new(data: str | int) -> str:
+    return str(data)`
+      },
+      {
+        title: "Common Types",
+        content: "- `list[int]`: List of integers\n- `dict[str, int]`: Dict with string keys, int values\n- `tuple[int, str]`: Tuple with specific types\n- `Callable[[int, int], int]`: Function that takes 2 ints, returns int\n- `Any`: Anything (avoid if possible)",
+        code: `from typing import Callable, Any
+
+def apply_func(func: Callable[[int], int], value: int) -> int:
+    return func(value)
+
+result = apply_func(lambda x: x * 2, 5)  # 10`
+      }
+    ],
+    quiz: [
+      {
+        question: "Are type hints enforced at runtime?",
+        options: ["Yes", "No", "Only in Python 3.10+", "Only with mypy"],
+        correctAnswer: 1
+      }
+    ]
+  },
+  {
+    id: "py-comprehensions",
+    category: "Python Syntax",
+    title: "Comprehensions (List, Dict, Set)",
+    description: "Concise syntax for creating collections. Faster and more readable than loops.",
+    sections: [
+      {
+        title: "List Comprehension",
+        content: "Syntax: `[expression for item in iterable if condition]`",
+        code: `# Basic
+squares = [x**2 for x in range(10)]
+
+# With condition
+evens = [x for x in range(20) if x % 2 == 0]
+
+# Nested loops (flattening)
+matrix = [[1, 2], [3, 4], [5, 6]]
+flat = [num for row in matrix for num in row]
+# [1, 2, 3, 4, 5, 6]`
+      },
+      {
+        title: "Dict Comprehension",
+        content: "Syntax: `{key: value for item in iterable if condition}`",
+        code: `# Basic
+squares = {x: x**2 for x in range(5)}
+# {0: 0, 1: 1, 2: 4, 3: 9, 4: 16}
+
+# Swap keys and values
+original = {"a": 1, "b": 2}
+swapped = {v: k for k, v in original.items()}
+# {1: "a", 2: "b"}
+
+# Filter a dict
+scores = {"Alice": 85, "Bob": 60, "Charlie": 92}
+passed = {k: v for k, v in scores.items() if v >= 70}`
+      },
+      {
+        title: "Set Comprehension",
+        content: "Syntax: `{expression for item in iterable if condition}`",
+        code: `# Remove duplicates and transform
+words = ["hello", "world", "hello", "python"]
+unique_lengths = {len(w) for w in words}
+# {5, 6}`
+      }
+    ],
+    quiz: [
+      {
+        question: "What is the output of [x*2 for x in [1,2,3]]?",
+        options: ["[1,2,3]", "[2,4,6]", "[1,4,9]", "Error"],
+        correctAnswer: 1
+      }
+    ]
+  },
+  {
+    id: "py-collections",
+    category: "Python Syntax",
+    title: "Collections Module",
+    description: "Specialized container types beyond list, dict, set.",
+    sections: [
+      {
+        title: "Counter",
+        content: "Count occurrences of elements. Extremely useful for frequency problems.",
+        code: `from collections import Counter
+
+words = ["apple", "banana", "apple", "cherry", "banana", "apple"]
+count = Counter(words)
+# Counter({'apple': 3, 'banana': 2, 'cherry': 1})
+
+print(count.most_common(2))  # [('apple', 3), ('banana', 2)]
+print(count['apple'])  # 3
+print(count['grape'])  # 0 (no KeyError!)`
+      },
+      {
+        title: "defaultdict",
+        content: "Dict that auto-initializes missing keys. Avoids KeyError.",
+        code: `from collections import defaultdict
+
+# Group items by first letter
+words = ["apple", "banana", "apricot", "blueberry"]
+groups = defaultdict(list)
+for word in words:
+    groups[word[0]].append(word)
+# {'a': ['apple', 'apricot'], 'b': ['banana', 'blueberry']}`
+      },
+      {
+        title: "deque (Double-Ended Queue)",
+        content: "O(1) append and pop from BOTH ends. Use for Queues and Sliding Windows.",
+        code: `from collections import deque
+
+q = deque([1, 2, 3])
+q.append(4)      # [1, 2, 3, 4]
+q.appendleft(0)  # [0, 1, 2, 3, 4]
+q.pop()          # 4, q is [0, 1, 2, 3]
+q.popleft()      # 0, q is [1, 2, 3]
+
+# Fixed-size window
+window = deque(maxlen=3)
+for i in range(5):
+    window.append(i)
+    print(list(window))
+# [0], [0, 1], [0, 1, 2], [1, 2, 3], [2, 3, 4]`
+      },
+      {
+        title: "namedtuple",
+        content: "Tuple with named fields. Lightweight alternative to classes.",
+        code: `from collections import namedtuple
+
+Point = namedtuple('Point', ['x', 'y'])
+p = Point(3, 4)
+print(p.x, p.y)  # 3 4
+print(p[0], p[1])  # 3 4 (still works like tuple)`
+      }
+    ],
+    quiz: [
+      {
+        question: "What does Counter return for a missing key?",
+        options: ["KeyError", "None", "0", "-1"],
+        correctAnswer: 2
+      },
+      {
+        question: "What is the time complexity of deque.popleft()?",
+        options: ["O(N)", "O(log N)", "O(1)", "O(N^2)"],
+        correctAnswer: 2
+      }
+    ]
+  },
+  {
+    id: "py-itertools",
+    category: "Python Syntax",
+    title: "Itertools Module",
+    description: "Powerful iteration tools. Combinations, permutations, grouping, and more.",
+    sections: [
+      {
+        title: "Combinations & Permutations",
+        content: "Generate all possible selections or arrangements.",
+        code: `from itertools import combinations, permutations, product
+
+# Combinations: Order doesn't matter, no repetition
+list(combinations([1, 2, 3], 2))
+# [(1, 2), (1, 3), (2, 3)]
+
+# Permutations: Order matters
+list(permutations([1, 2, 3], 2))
+# [(1, 2), (1, 3), (2, 1), (2, 3), (3, 1), (3, 2)]
+
+# Cartesian Product (like nested loops)
+list(product([1, 2], ['a', 'b']))
+# [(1, 'a'), (1, 'b'), (2, 'a'), (2, 'b')]`
+      },
+      {
+        title: "groupby",
+        content: "Group consecutive elements. Data MUST be sorted first!",
+        code: `from itertools import groupby
+
+data = [('A', 1), ('A', 2), ('B', 3), ('B', 4), ('A', 5)]
+# Sort by first element first!
+data.sort(key=lambda x: x[0])
+
+for key, group in groupby(data, key=lambda x: x[0]):
+    print(key, list(group))
+# A [('A', 1), ('A', 2), ('A', 5)]
+# B [('B', 3), ('B', 4)]`
+      },
+      {
+        title: "chain & accumulate",
+        content: "Combine iterables or compute running totals.",
+        code: `from itertools import chain, accumulate
+
+# Chain: Flatten iterables
+list(chain([1, 2], [3, 4], [5]))
+# [1, 2, 3, 4, 5]
+
+# Accumulate: Running sum (or other operation)
+list(accumulate([1, 2, 3, 4]))
+# [1, 3, 6, 10]`
+      }
+    ],
+    quiz: [
+      {
+        question: "What's the difference between combinations and permutations?",
+        options: ["No difference", "Combinations care about order", "Permutations care about order", "Permutations allow repetition"],
+        correctAnswer: 2
+      }
+    ]
+  },
+  {
+    id: "py-functools",
+    category: "Python Syntax",
+    title: "Functools Module",
+    description: "Higher-order functions and operations on callable objects.",
+    sections: [
+      {
+        title: "lru_cache (Memoization)",
+        content: "Cache function results. ESSENTIAL for Dynamic Programming.",
+        code: `from functools import lru_cache
+
+@lru_cache(maxsize=None)  # None = unlimited cache
+def fib(n):
+    if n < 2:
+        return n
+    return fib(n-1) + fib(n-2)
+
+print(fib(100))  # Instant! Without cache, this would take forever.`
+      },
+      {
+        title: "reduce",
+        content: "Apply a function cumulatively to reduce a sequence to a single value.",
+        code: `from functools import reduce
+
+# Sum of list (same as sum())
+total = reduce(lambda a, b: a + b, [1, 2, 3, 4])
+# 10
+
+# Product of list
+product = reduce(lambda a, b: a * b, [1, 2, 3, 4])
+# 24
+
+# Find max (same as max())
+maximum = reduce(lambda a, b: a if a > b else b, [3, 1, 4, 1, 5])
+# 5`
+      },
+      {
+        title: "partial",
+        content: "Freeze some arguments of a function. Creates a new function with fewer parameters.",
+        code: `from functools import partial
+
+def power(base, exponent):
+    return base ** exponent
+
+square = partial(power, exponent=2)
+cube = partial(power, exponent=3)
+
+print(square(5))  # 25
+print(cube(5))    # 125`
+      }
+    ],
+    quiz: [
+      {
+        question: "What does @lru_cache do?",
+        options: ["Limits function calls", "Caches return values", "Makes function faster", "All of the above"],
+        correctAnswer: 3
+      }
+    ]
+  },
+
+  // =========================================
+  // PYTHON DSA (EXPANDED)
   {
     id: "py-dsa-linear",
     category: "Python DSA",
@@ -929,6 +1480,583 @@ def merge(left, right):
     sorted_arr.extend(left[i:])
     sorted_arr.extend(right[j:])
     return sorted_arr`
+      }
+    ]
+  },
+
+  {
+    id: "py-dsa-two-pointers",
+    category: "Python DSA",
+    title: "Two Pointers Technique",
+    description: "Use two indices to traverse data. Reduces O(N²) to O(N) for many problems.",
+    sections: [
+      {
+        title: "When to Use",
+        content: "- **Sorted Arrays**: Finding pairs that sum to a target.\n- **Linked Lists**: Finding middle, detecting cycles.\n- **Strings**: Palindrome checks, reversing.\n- **Removing Duplicates**: In-place array modification.",
+        tip: "If the problem involves a sorted array and pairs/triplets, think Two Pointers."
+      },
+      {
+        title: "Pattern 1: Opposite Ends",
+        content: "Start one pointer at the beginning, one at the end. Move them towards each other.",
+        code: `def two_sum_sorted(nums, target):
+    """Find two numbers that sum to target in a SORTED array."""
+    left, right = 0, len(nums) - 1
+    
+    while left < right:
+        curr_sum = nums[left] + nums[right]
+        if curr_sum == target:
+            return [left, right]
+        elif curr_sum < target:
+            left += 1   # Need bigger sum
+        else:
+            right -= 1  # Need smaller sum
+    
+    return []  # No solution
+
+# Example: nums = [1, 2, 7, 11, 15], target = 9
+# Returns [1, 2] (indices of 2 and 7)`
+      },
+      {
+        title: "Pattern 2: Same Direction (Fast/Slow)",
+        content: "Both pointers start at the beginning. One moves faster than the other.",
+        code: `def remove_duplicates(nums):
+    """Remove duplicates in-place from sorted array. Return new length."""
+    if not nums:
+        return 0
+    
+    slow = 0  # Points to last unique element
+    
+    for fast in range(1, len(nums)):
+        if nums[fast] != nums[slow]:
+            slow += 1
+            nums[slow] = nums[fast]
+    
+    return slow + 1
+
+# Example: nums = [1, 1, 2, 2, 3]
+# After: nums = [1, 2, 3, ...], returns 3`
+      },
+      {
+        title: "Pattern 3: Cycle Detection (Floyd's)",
+        content: "Fast pointer moves 2 steps, slow moves 1. If there's a cycle, they will meet.",
+        code: `def has_cycle(head):
+    """Detect cycle in linked list."""
+    slow = fast = head
+    
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+        if slow == fast:
+            return True
+    
+    return False`
+      }
+    ]
+  },
+  {
+    id: "py-dsa-sliding-window",
+    category: "Python DSA",
+    title: "Sliding Window Technique",
+    description: "Maintain a 'window' of elements as you traverse. Essential for substring/subarray problems.",
+    sections: [
+      {
+        title: "When to Use",
+        content: "- Find longest/shortest substring with some property.\n- Find max/min sum of subarray of size K.\n- Anagram detection.\n- Keywords: 'contiguous', 'substring', 'subarray', 'window'.",
+        tip: "If you see 'contiguous subarray' or 'substring', think Sliding Window."
+      },
+      {
+        title: "Fixed-Size Window",
+        content: "Window size is constant. Slide by adding one element and removing one.",
+        code: `def max_sum_subarray(nums, k):
+    """Find max sum of any subarray of size k."""
+    if len(nums) < k:
+        return 0
+    
+    # Calculate sum of first window
+    window_sum = sum(nums[:k])
+    max_sum = window_sum
+    
+    # Slide the window
+    for i in range(k, len(nums)):
+        window_sum += nums[i] - nums[i - k]  # Add new, remove old
+        max_sum = max(max_sum, window_sum)
+    
+    return max_sum
+
+# Example: nums = [1, 4, 2, 10, 2, 3, 1, 0, 20], k = 4
+# Returns 24 (subarray [2, 10, 2, 10] wait no... [0, 20]? Let me recalc)
+# Actually: [10, 2, 3, 1] = 16, [3, 1, 0, 20] = 24. Returns 24.`
+      },
+      {
+        title: "Variable-Size Window",
+        content: "Window size changes based on conditions. Use two pointers (left, right).",
+        code: `def longest_substring_k_distinct(s, k):
+    """Find longest substring with at most k distinct characters."""
+    from collections import defaultdict
+    
+    char_count = defaultdict(int)
+    left = 0
+    max_len = 0
+    
+    for right in range(len(s)):
+        char_count[s[right]] += 1
+        
+        # Shrink window if too many distinct chars
+        while len(char_count) > k:
+            char_count[s[left]] -= 1
+            if char_count[s[left]] == 0:
+                del char_count[s[left]]
+            left += 1
+        
+        max_len = max(max_len, right - left + 1)
+    
+    return max_len
+
+# Example: s = "eceba", k = 2
+# Returns 3 ("ece")`
+      },
+      {
+        title: "Classic Problem: Longest Substring Without Repeating",
+        content: "This is a LeetCode classic. Use a Set to track characters in the window.",
+        code: `def length_of_longest_substring(s):
+    """Find length of longest substring without repeating characters."""
+    seen = set()
+    left = 0
+    max_len = 0
+    
+    for right in range(len(s)):
+        while s[right] in seen:
+            seen.remove(s[left])
+            left += 1
+        
+        seen.add(s[right])
+        max_len = max(max_len, right - left + 1)
+    
+    return max_len
+
+# Example: s = "abcabcbb"
+# Returns 3 ("abc")`
+      }
+    ]
+  },
+  {
+    id: "py-dsa-heap",
+    category: "Python DSA",
+    title: "Heaps & Priority Queues",
+    description: "Efficiently get min/max element. O(log N) insert, O(1) peek, O(log N) pop.",
+    sections: [
+      {
+        title: "What is a Heap?",
+        content: "A binary tree where parent is always smaller (min-heap) or larger (max-heap) than children. Python's `heapq` is a MIN-heap by default.",
+        code: `import heapq
+
+# Create a heap from a list
+nums = [5, 3, 8, 1, 2]
+heapq.heapify(nums)  # In-place, O(N)
+# nums is now a valid heap
+
+# Push
+heapq.heappush(nums, 0)
+
+# Pop (removes and returns smallest)
+smallest = heapq.heappop(nums)  # 0
+
+# Peek (get smallest without removing)
+smallest = nums[0]`
+      },
+      {
+        title: "Max-Heap Trick",
+        content: "Python only has min-heap. To simulate max-heap, negate the values.",
+        code: `import heapq
+
+nums = [1, 3, 5, 7, 9]
+
+# Max-heap: negate values
+max_heap = [-x for x in nums]
+heapq.heapify(max_heap)
+
+# Get max
+largest = -heapq.heappop(max_heap)  # 9`
+      },
+      {
+        title: "Top K Elements Pattern",
+        content: "Find the K largest/smallest elements. Use a heap of size K.",
+        code: `import heapq
+
+def find_k_largest(nums, k):
+    """Find k largest elements."""
+    # Use min-heap of size k
+    # The smallest element in the heap is the kth largest overall
+    heap = nums[:k]
+    heapq.heapify(heap)
+    
+    for num in nums[k:]:
+        if num > heap[0]:  # Bigger than smallest in heap
+            heapq.heapreplace(heap, num)  # Pop and push in one operation
+    
+    return heap
+
+# Or use the built-in:
+largest = heapq.nlargest(3, [1, 5, 2, 8, 3])  # [8, 5, 3]
+smallest = heapq.nsmallest(3, [1, 5, 2, 8, 3])  # [1, 2, 3]`
+      },
+      {
+        title: "Heap with Custom Objects",
+        content: "Use tuples where the first element is the priority.",
+        code: `import heapq
+
+# Priority Queue with (priority, data)
+tasks = []
+heapq.heappush(tasks, (2, "Low priority"))
+heapq.heappush(tasks, (1, "High priority"))
+heapq.heappush(tasks, (3, "Lowest priority"))
+
+while tasks:
+    priority, task = heapq.heappop(tasks)
+    print(f"{priority}: {task}")
+# 1: High priority
+# 2: Low priority
+# 3: Lowest priority`
+      }
+    ]
+  },
+  {
+    id: "py-dsa-union-find",
+    category: "Python DSA",
+    title: "Union-Find (Disjoint Set)",
+    description: "Track connected components. Near O(1) for union and find operations.",
+    sections: [
+      {
+        title: "When to Use",
+        content: "- Finding connected components in a graph.\n- Detecting cycles in an undirected graph.\n- Kruskal's Minimum Spanning Tree.\n- Keywords: 'connected', 'groups', 'merge', 'same component'.",
+        tip: "If you need to repeatedly check if two nodes are connected, use Union-Find."
+      },
+      {
+        title: "The Data Structure",
+        content: "Each element has a 'parent'. Initially, each element is its own parent. When we union two sets, we make one the parent of the other.",
+        code: `class UnionFind:
+    def __init__(self, n):
+        self.parent = list(range(n))  # Each node is its own parent
+        self.rank = [0] * n  # For optimization
+    
+    def find(self, x):
+        """Find the root of x with path compression."""
+        if self.parent[x] != x:
+            self.parent[x] = self.find(self.parent[x])  # Path compression
+        return self.parent[x]
+    
+    def union(self, x, y):
+        """Merge the sets containing x and y."""
+        root_x, root_y = self.find(x), self.find(y)
+        if root_x == root_y:
+            return False  # Already in same set
+        
+        # Union by rank (attach smaller tree under larger)
+        if self.rank[root_x] < self.rank[root_y]:
+            self.parent[root_x] = root_y
+        elif self.rank[root_x] > self.rank[root_y]:
+            self.parent[root_y] = root_x
+        else:
+            self.parent[root_y] = root_x
+            self.rank[root_x] += 1
+        
+        return True
+    
+    def connected(self, x, y):
+        """Check if x and y are in the same set."""
+        return self.find(x) == self.find(y)`
+      },
+      {
+        title: "Example: Number of Connected Components",
+        content: "Given n nodes and a list of edges, count connected components.",
+        code: `def count_components(n, edges):
+    uf = UnionFind(n)
+    components = n
+    
+    for a, b in edges:
+        if uf.union(a, b):
+            components -= 1  # Merged two components
+    
+    return components
+
+# Example: n=5, edges=[[0,1], [1,2], [3,4]]
+# Returns 2 (components: {0,1,2} and {3,4})`
+      }
+    ]
+  },
+  {
+    id: "py-dsa-dp",
+    category: "Python DSA",
+    title: "Dynamic Programming (DP)",
+    description: "Break problems into overlapping subproblems. The most feared interview topic.",
+    sections: [
+      {
+        title: "When to Use DP",
+        content: "1. **Optimal Substructure**: Optimal solution uses optimal solutions to subproblems.\n2. **Overlapping Subproblems**: Same subproblems are solved multiple times.\n\nKeywords: 'minimum', 'maximum', 'count ways', 'can you reach', 'longest', 'shortest'.",
+        tip: "If you can solve it with recursion but it's slow, it might be DP."
+      },
+      {
+        title: "Top-Down (Memoization)",
+        content: "Write recursive solution, then cache results. Easier to write.",
+        code: `from functools import lru_cache
+
+@lru_cache(maxsize=None)
+def fib(n):
+    if n < 2:
+        return n
+    return fib(n-1) + fib(n-2)
+
+# Without cache: O(2^N)
+# With cache: O(N)`
+      },
+      {
+        title: "Bottom-Up (Tabulation)",
+        content: "Build solution from smallest subproblems up. Often more efficient.",
+        code: `def fib(n):
+    if n < 2:
+        return n
+    
+    dp = [0] * (n + 1)
+    dp[1] = 1
+    
+    for i in range(2, n + 1):
+        dp[i] = dp[i-1] + dp[i-2]
+    
+    return dp[n]
+
+# Space-optimized (only need last 2 values)
+def fib_optimized(n):
+    if n < 2:
+        return n
+    
+    prev, curr = 0, 1
+    for _ in range(2, n + 1):
+        prev, curr = curr, prev + curr
+    
+    return curr`
+      },
+      {
+        title: "Classic Problem: Climbing Stairs",
+        content: "You can climb 1 or 2 steps. How many ways to reach step N?",
+        code: `def climb_stairs(n):
+    """This is literally Fibonacci!"""
+    if n <= 2:
+        return n
+    
+    prev, curr = 1, 2
+    for _ in range(3, n + 1):
+        prev, curr = curr, prev + curr
+    
+    return curr
+
+# climb_stairs(5) = 8 ways`
+      },
+      {
+        title: "Classic Problem: Coin Change",
+        content: "Minimum coins to make amount. Classic unbounded knapsack.",
+        code: `def coin_change(coins, amount):
+    """Find minimum coins to make amount."""
+    dp = [float('inf')] * (amount + 1)
+    dp[0] = 0  # 0 coins to make amount 0
+    
+    for coin in coins:
+        for x in range(coin, amount + 1):
+            dp[x] = min(dp[x], dp[x - coin] + 1)
+    
+    return dp[amount] if dp[amount] != float('inf') else -1
+
+# coins = [1, 2, 5], amount = 11
+# Returns 3 (5 + 5 + 1)`
+      },
+      {
+        title: "Classic Problem: Longest Common Subsequence",
+        content: "Find longest subsequence common to two strings.",
+        code: `def lcs(text1, text2):
+    """Find length of longest common subsequence."""
+    m, n = len(text1), len(text2)
+    dp = [[0] * (n + 1) for _ in range(m + 1)]
+    
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            if text1[i-1] == text2[j-1]:
+                dp[i][j] = dp[i-1][j-1] + 1
+            else:
+                dp[i][j] = max(dp[i-1][j], dp[i][j-1])
+    
+    return dp[m][n]
+
+# lcs("abcde", "ace") = 3 ("ace")`
+      }
+    ]
+  },
+  {
+    id: "py-dsa-binary-search",
+    category: "Python DSA",
+    title: "Binary Search Patterns",
+    description: "O(log N) search in sorted data. Many variations beyond basic search.",
+    sections: [
+      {
+        title: "Basic Binary Search",
+        content: "Find exact element in sorted array.",
+        code: `def binary_search(nums, target):
+    left, right = 0, len(nums) - 1
+    
+    while left <= right:
+        mid = (left + right) // 2
+        if nums[mid] == target:
+            return mid
+        elif nums[mid] < target:
+            left = mid + 1
+        else:
+            right = mid - 1
+    
+    return -1  # Not found`
+      },
+      {
+        title: "Find First/Last Occurrence",
+        content: "When there are duplicates, find the leftmost or rightmost occurrence.",
+        code: `def find_first(nums, target):
+    """Find first occurrence of target."""
+    left, right = 0, len(nums) - 1
+    result = -1
+    
+    while left <= right:
+        mid = (left + right) // 2
+        if nums[mid] == target:
+            result = mid
+            right = mid - 1  # Keep searching left
+        elif nums[mid] < target:
+            left = mid + 1
+        else:
+            right = mid - 1
+    
+    return result
+
+def find_last(nums, target):
+    """Find last occurrence of target."""
+    left, right = 0, len(nums) - 1
+    result = -1
+    
+    while left <= right:
+        mid = (left + right) // 2
+        if nums[mid] == target:
+            result = mid
+            left = mid + 1  # Keep searching right
+        elif nums[mid] < target:
+            left = mid + 1
+        else:
+            right = mid - 1
+    
+    return result`
+      },
+      {
+        title: "Python's bisect Module",
+        content: "Built-in binary search. Use it!",
+        code: `import bisect
+
+nums = [1, 2, 4, 4, 4, 6, 7]
+
+# bisect_left: First position where element could be inserted
+bisect.bisect_left(nums, 4)   # 2 (first 4)
+bisect.bisect_left(nums, 5)   # 5 (between 4 and 6)
+
+# bisect_right: Last position where element could be inserted
+bisect.bisect_right(nums, 4)  # 5 (after last 4)
+
+# insort: Insert while maintaining sorted order
+bisect.insort(nums, 5)  # nums is now [1, 2, 4, 4, 4, 5, 6, 7]`
+      },
+      {
+        title: "Binary Search on Answer",
+        content: "When the answer itself is in a range, binary search for it.",
+        code: `def min_eating_speed(piles, h):
+    """Koko eating bananas. Find minimum speed to eat all in h hours."""
+    def can_finish(speed):
+        hours = sum((pile + speed - 1) // speed for pile in piles)
+        return hours <= h
+    
+    left, right = 1, max(piles)
+    
+    while left < right:
+        mid = (left + right) // 2
+        if can_finish(mid):
+            right = mid  # Try slower
+        else:
+            left = mid + 1  # Need faster
+    
+    return left
+
+# piles = [3, 6, 7, 11], h = 8
+# Returns 4`
+      }
+    ]
+  },
+  {
+    id: "py-dsa-backtracking",
+    category: "Python DSA",
+    title: "Backtracking",
+    description: "Explore all possibilities by building candidates incrementally and abandoning bad paths.",
+    sections: [
+      {
+        title: "When to Use",
+        content: "- Generate all permutations/combinations.\n- Solve puzzles (Sudoku, N-Queens).\n- Find all paths in a graph.\n- Keywords: 'all possible', 'generate all', 'find all'.",
+        tip: "Backtracking = DFS + Pruning. If current path can't lead to solution, abandon it early."
+      },
+      {
+        title: "Template",
+        content: "The general pattern for backtracking problems.",
+        code: `def backtrack(candidate, state, result):
+    if is_solution(candidate):
+        result.append(candidate.copy())
+        return
+    
+    for choice in get_choices(state):
+        if is_valid(choice):
+            make_choice(candidate, choice)
+            backtrack(candidate, state, result)
+            undo_choice(candidate, choice)  # Backtrack!`
+      },
+      {
+        title: "Example: Generate All Subsets",
+        content: "Given [1, 2, 3], generate all subsets (power set).",
+        code: `def subsets(nums):
+    result = []
+    
+    def backtrack(start, path):
+        result.append(path[:])  # Add current subset
+        
+        for i in range(start, len(nums)):
+            path.append(nums[i])
+            backtrack(i + 1, path)
+            path.pop()  # Backtrack
+    
+    backtrack(0, [])
+    return result
+
+# subsets([1, 2, 3])
+# [[], [1], [1,2], [1,2,3], [1,3], [2], [2,3], [3]]`
+      },
+      {
+        title: "Example: Generate All Permutations",
+        content: "Given [1, 2, 3], generate all orderings.",
+        code: `def permutations(nums):
+    result = []
+    
+    def backtrack(path, remaining):
+        if not remaining:
+            result.append(path[:])
+            return
+        
+        for i in range(len(remaining)):
+            path.append(remaining[i])
+            backtrack(path, remaining[:i] + remaining[i+1:])
+            path.pop()  # Backtrack
+    
+    backtrack([], nums)
+    return result
+
+# permutations([1, 2, 3])
+# [[1,2,3], [1,3,2], [2,1,3], [2,3,1], [3,1,2], [3,2,1]]`
       }
     ]
   },
@@ -1179,6 +2307,289 @@ my_lunch = (PizzaBuilder()
             .add_cheese()
             .add_pepperoni()
             .build())`
+      }
+    ]
+  },
+
+  {
+    id: "pattern-decorator",
+    category: "Design Patterns",
+    title: "Decorator Pattern",
+    description: "Add behavior to objects dynamically without modifying their class. Like wrapping a gift.",
+    sections: [
+      {
+        title: "The Problem",
+        content: "You have a `Coffee` class. You want to add milk, sugar, whipped cream. Creating `CoffeeWithMilk`, `CoffeeWithMilkAndSugar`, etc. leads to class explosion."
+      },
+      {
+        title: "The Solution",
+        content: "Wrap the object with 'decorator' objects that add behavior. Each decorator has the same interface as the original.",
+        code: `from abc import ABC, abstractmethod
+
+# 1. Component Interface
+class Coffee(ABC):
+    @abstractmethod
+    def cost(self): pass
+    @abstractmethod
+    def description(self): pass
+
+# 2. Concrete Component
+class SimpleCoffee(Coffee):
+    def cost(self): return 2.0
+    def description(self): return "Coffee"
+
+# 3. Decorator Base
+class CoffeeDecorator(Coffee):
+    def __init__(self, coffee):
+        self._coffee = coffee
+    def cost(self): return self._coffee.cost()
+    def description(self): return self._coffee.description()
+
+# 4. Concrete Decorators
+class Milk(CoffeeDecorator):
+    def cost(self): return self._coffee.cost() + 0.5
+    def description(self): return self._coffee.description() + ", Milk"
+
+class Sugar(CoffeeDecorator):
+    def cost(self): return self._coffee.cost() + 0.2
+    def description(self): return self._coffee.description() + ", Sugar"
+
+# Usage: Stack decorators!
+coffee = SimpleCoffee()
+coffee = Milk(coffee)
+coffee = Sugar(coffee)
+print(coffee.description())  # "Coffee, Milk, Sugar"
+print(coffee.cost())         # 2.7`
+      }
+    ]
+  },
+  {
+    id: "pattern-adapter",
+    category: "Design Patterns",
+    title: "Adapter Pattern",
+    description: "Make incompatible interfaces work together. Like a power adapter for travel.",
+    sections: [
+      {
+        title: "The Problem",
+        content: "You have a `JSONParser` that your code uses. But you get a new `XMLParser` library with a different interface. You don't want to change all your code."
+      },
+      {
+        title: "The Solution",
+        content: "Create an Adapter class that wraps the new interface and exposes the old one.",
+        code: `# Old interface your code expects
+class JSONParser:
+    def parse_json(self, data):
+        return {"parsed": data}
+
+# New library with different interface
+class XMLParser:
+    def parse_xml(self, xml_string):
+        return {"xml_parsed": xml_string}
+
+# Adapter: Makes XMLParser look like JSONParser
+class XMLToJSONAdapter:
+    def __init__(self, xml_parser):
+        self.xml_parser = xml_parser
+    
+    def parse_json(self, data):
+        # Convert the call to the new interface
+        return self.xml_parser.parse_xml(data)
+
+# Usage: Your code doesn't change!
+def process_data(parser, data):
+    return parser.parse_json(data)
+
+json_parser = JSONParser()
+xml_parser = XMLToJSONAdapter(XMLParser())
+
+process_data(json_parser, "some data")  # Works
+process_data(xml_parser, "some data")   # Also works!`
+      }
+    ]
+  },
+  {
+    id: "pattern-command",
+    category: "Design Patterns",
+    title: "Command Pattern",
+    description: "Encapsulate a request as an object. Enables undo/redo, queuing, and logging.",
+    sections: [
+      {
+        title: "The Problem",
+        content: "You're building a text editor. You need Undo/Redo. How do you track what operations were performed?"
+      },
+      {
+        title: "The Solution",
+        content: "Each action becomes a Command object with `execute()` and `undo()` methods. Store commands in a history stack.",
+        code: `from abc import ABC, abstractmethod
+
+# 1. Command Interface
+class Command(ABC):
+    @abstractmethod
+    def execute(self): pass
+    @abstractmethod
+    def undo(self): pass
+
+# 2. Receiver (the thing being acted upon)
+class TextEditor:
+    def __init__(self):
+        self.text = ""
+    
+    def insert(self, text):
+        self.text += text
+    
+    def delete(self, length):
+        deleted = self.text[-length:]
+        self.text = self.text[:-length]
+        return deleted
+
+# 3. Concrete Commands
+class InsertCommand(Command):
+    def __init__(self, editor, text):
+        self.editor = editor
+        self.text = text
+    
+    def execute(self):
+        self.editor.insert(self.text)
+    
+    def undo(self):
+        self.editor.delete(len(self.text))
+
+# 4. Invoker (manages command history)
+class CommandManager:
+    def __init__(self):
+        self.history = []
+    
+    def execute(self, command):
+        command.execute()
+        self.history.append(command)
+    
+    def undo(self):
+        if self.history:
+            command = self.history.pop()
+            command.undo()
+
+# Usage
+editor = TextEditor()
+manager = CommandManager()
+
+manager.execute(InsertCommand(editor, "Hello"))
+manager.execute(InsertCommand(editor, " World"))
+print(editor.text)  # "Hello World"
+
+manager.undo()
+print(editor.text)  # "Hello"`
+      }
+    ]
+  },
+  {
+    id: "pattern-state",
+    category: "Design Patterns",
+    title: "State Machine Pattern",
+    description: "Object behavior changes based on its internal state. Like a traffic light.",
+    sections: [
+      {
+        title: "The Problem",
+        content: "You have an object (like an Order) that behaves differently in different states (Pending, Shipped, Delivered). Using `if/else` everywhere is messy."
+      },
+      {
+        title: "The Solution",
+        content: "Create a State class for each state. The object delegates behavior to its current state object.",
+        code: `from abc import ABC, abstractmethod
+
+# 1. State Interface
+class OrderState(ABC):
+    @abstractmethod
+    def next(self, order): pass
+    @abstractmethod
+    def status(self): pass
+
+# 2. Concrete States
+class PendingState(OrderState):
+    def next(self, order):
+        order.state = ShippedState()
+    def status(self):
+        return "Order is pending"
+
+class ShippedState(OrderState):
+    def next(self, order):
+        order.state = DeliveredState()
+    def status(self):
+        return "Order has been shipped"
+
+class DeliveredState(OrderState):
+    def next(self, order):
+        print("Order already delivered!")
+    def status(self):
+        return "Order delivered"
+
+# 3. Context (the object with state)
+class Order:
+    def __init__(self):
+        self.state = PendingState()
+    
+    def next_state(self):
+        self.state.next(self)
+    
+    def get_status(self):
+        return self.state.status()
+
+# Usage
+order = Order()
+print(order.get_status())  # "Order is pending"
+order.next_state()
+print(order.get_status())  # "Order has been shipped"
+order.next_state()
+print(order.get_status())  # "Order delivered"`
+      }
+    ]
+  },
+  {
+    id: "pattern-iterator",
+    category: "Design Patterns",
+    title: "Iterator Pattern",
+    description: "Traverse a collection without exposing its internal structure. Python's for-loop is built on this.",
+    sections: [
+      {
+        title: "Python's Iterator Protocol",
+        content: "Any object with `__iter__()` and `__next__()` methods is an iterator. `for` loops use this automatically.",
+        code: `class Countdown:
+    def __init__(self, start):
+        self.current = start
+    
+    def __iter__(self):
+        return self  # Returns the iterator object
+    
+    def __next__(self):
+        if self.current <= 0:
+            raise StopIteration
+        self.current -= 1
+        return self.current + 1
+
+# Usage
+for num in Countdown(5):
+    print(num)  # 5, 4, 3, 2, 1`
+      },
+      {
+        title: "Custom Collection Iterator",
+        content: "Iterate over a custom data structure.",
+        code: `class BinaryTree:
+    def __init__(self, value, left=None, right=None):
+        self.value = value
+        self.left = left
+        self.right = right
+    
+    def __iter__(self):
+        # In-order traversal
+        if self.left:
+            yield from self.left
+        yield self.value
+        if self.right:
+            yield from self.right
+
+# Usage
+tree = BinaryTree(2, BinaryTree(1), BinaryTree(3))
+for val in tree:
+    print(val)  # 1, 2, 3`
       }
     ]
   },
@@ -2414,7 +3825,7 @@ def sortedArrayToBST(nums):
       {
         title: "2. Invert Binary Tree",
         content: "Swap every left child with its right child.\n- **Strategy**: Recursive DFS. `root.left, root.right = invert(root.right), invert(root.left)`.",
-        codeNote: "Homebrew Creator Max Howell was famously rejected by Google for not knowing this on a whiteboard.",
+        codeNote: "Homebrew Creator Max Howell was famously rejected by Google for not knowing this on a whiteboard. Time: O(N). Space: O(H) where H is height.",
         relatedTopicLink: "py-dsa-trees",
         code: `def invertTree(root):
     if not root: return None
@@ -2427,6 +3838,1422 @@ def sortedArrayToBST(nums):
     invertTree(root.right)
     
     return root`
+      }
+    ]
+  },
+  
+  // =========================================
+  // MORE SOLVED PROBLEMS - TWO POINTERS
+  // =========================================
+  {
+    id: "prob-two-sum",
+    category: "Solved Problems",
+    title: "Two Sum (Hash Map)",
+    description: "The most famous LeetCode problem. Find two numbers that add up to target.",
+    sections: [
+      {
+        title: "The Task",
+        content: "Given an array of integers `nums` and an integer `target`, return indices of the two numbers such that they add up to `target`.\n\n**Constraint**: Each input has exactly one solution."
+      },
+      {
+        title: "Brute Force (O(N²))",
+        content: "Check every pair. This is too slow for interviews.",
+        code: `def two_sum_brute(nums, target):
+    for i in range(len(nums)):
+        for j in range(i + 1, len(nums)):
+            if nums[i] + nums[j] == target:
+                return [i, j]
+    return []`
+      },
+      {
+        title: "Optimal Solution (O(N))",
+        content: "Use a Hash Map. For each number, check if its complement (target - num) exists.",
+        codeNote: "Hash Map Lookup: O(1). We trade space for time. Time: O(N). Space: O(N).",
+        relatedTopicLink: "py-dicts",
+        code: `def two_sum(nums, target):
+    seen = {}  # value -> index
+    
+    for i, num in enumerate(nums):
+        complement = target - num
+        if complement in seen:
+            return [seen[complement], i]
+        seen[num] = i
+    
+    return []
+
+# Example: nums = [2, 7, 11, 15], target = 9
+# Returns [0, 1] (2 + 7 = 9)`
+      }
+    ]
+  },
+  {
+    id: "prob-three-sum",
+    category: "Solved Problems",
+    title: "Three Sum",
+    description: "Find all unique triplets that sum to zero. Combines sorting with two pointers.",
+    sections: [
+      {
+        title: "The Task",
+        content: "Given an array, find all unique triplets `[nums[i], nums[j], nums[k]]` such that `i != j != k` and `nums[i] + nums[j] + nums[k] == 0`."
+      },
+      {
+        title: "Strategy",
+        content: "1. **Sort** the array.\n2. **Fix** one number (i).\n3. Use **Two Pointers** to find pairs that sum to `-nums[i]`.\n4. **Skip duplicates** to avoid duplicate triplets."
+      },
+      {
+        title: "Implementation",
+        content: "The key insight is that after sorting, we can use two pointers efficiently.",
+        codeNote: "Sorting enables Two Pointers. Skipping duplicates is crucial. Time: O(N²). Space: O(1) excluding output.",
+        relatedTopicLink: "py-dsa-two-pointers",
+        code: `def three_sum(nums):
+    nums.sort()
+    result = []
+    
+    for i in range(len(nums) - 2):
+        # Skip duplicates for i
+        if i > 0 and nums[i] == nums[i - 1]:
+            continue
+        
+        left, right = i + 1, len(nums) - 1
+        target = -nums[i]
+        
+        while left < right:
+            curr_sum = nums[left] + nums[right]
+            
+            if curr_sum == target:
+                result.append([nums[i], nums[left], nums[right]])
+                
+                # Skip duplicates for left and right
+                while left < right and nums[left] == nums[left + 1]:
+                    left += 1
+                while left < right and nums[right] == nums[right - 1]:
+                    right -= 1
+                
+                left += 1
+                right -= 1
+            elif curr_sum < target:
+                left += 1
+            else:
+                right -= 1
+    
+    return result
+
+# Example: nums = [-1, 0, 1, 2, -1, -4]
+# Returns [[-1, -1, 2], [-1, 0, 1]]`
+      }
+    ]
+  },
+  {
+    id: "prob-container-water",
+    category: "Solved Problems",
+    title: "Container With Most Water",
+    description: "Find two lines that together with x-axis form a container with most water.",
+    sections: [
+      {
+        title: "The Task",
+        content: "Given n non-negative integers representing heights, find two lines that form a container with the most water.\n\n**Area** = min(height[left], height[right]) × (right - left)"
+      },
+      {
+        title: "Strategy",
+        content: "Start with widest container (left=0, right=n-1). Move the pointer with the shorter line inward, because moving the taller one can only decrease area."
+      },
+      {
+        title: "Implementation",
+        content: "Greedy two-pointer approach.",
+        codeNote: "Greedy Choice: Moving the shorter line might find a taller one. Moving the taller line can only decrease area. Time: O(N). Space: O(1).",
+        relatedTopicLink: "py-dsa-two-pointers",
+        code: `def max_area(height):
+    left, right = 0, len(height) - 1
+    max_water = 0
+    
+    while left < right:
+        width = right - left
+        h = min(height[left], height[right])
+        max_water = max(max_water, width * h)
+        
+        # Move the shorter line
+        if height[left] < height[right]:
+            left += 1
+        else:
+            right -= 1
+    
+    return max_water
+
+# Example: height = [1,8,6,2,5,4,8,3,7]
+# Returns 49`
+      }
+    ]
+  },
+  
+  // =========================================
+  // MORE SOLVED PROBLEMS - SLIDING WINDOW
+  // =========================================
+  {
+    id: "prob-min-window-substring",
+    category: "Solved Problems",
+    title: "Minimum Window Substring",
+    description: "Find the smallest substring containing all characters of another string. A HARD classic.",
+    sections: [
+      {
+        title: "The Task",
+        content: "Given strings `s` and `t`, find the minimum window in `s` which contains all characters of `t`.\n\n**Example**: s = 'ADOBECODEBANC', t = 'ABC' → 'BANC'"
+      },
+      {
+        title: "Strategy",
+        content: "1. Use two pointers (left, right) for the window.\n2. Expand right until window contains all chars of t.\n3. Contract left to minimize window while still valid.\n4. Track the minimum valid window."
+      },
+      {
+        title: "Implementation",
+        content: "Use Counter to track character frequencies.",
+        codeNote: "Sliding Window with Counter: Track 'required' chars and 'formed' chars. Time: O(S + T). Space: O(S + T).",
+        relatedTopicLink: "py-dsa-sliding-window",
+        code: `from collections import Counter
+
+def min_window(s, t):
+    if not t or not s:
+        return ""
+    
+    t_count = Counter(t)
+    required = len(t_count)
+    
+    left = 0
+    formed = 0
+    window_counts = {}
+    
+    min_len = float('inf')
+    min_window = (0, 0)
+    
+    for right in range(len(s)):
+        char = s[right]
+        window_counts[char] = window_counts.get(char, 0) + 1
+        
+        if char in t_count and window_counts[char] == t_count[char]:
+            formed += 1
+        
+        # Contract window
+        while left <= right and formed == required:
+            if right - left + 1 < min_len:
+                min_len = right - left + 1
+                min_window = (left, right)
+            
+            char = s[left]
+            window_counts[char] -= 1
+            if char in t_count and window_counts[char] < t_count[char]:
+                formed -= 1
+            left += 1
+    
+    l, r = min_window
+    return s[l:r+1] if min_len != float('inf') else ""`
+      }
+    ]
+  },
+  {
+    id: "prob-max-sliding-window",
+    category: "Solved Problems",
+    title: "Sliding Window Maximum",
+    description: "Find the maximum in each window of size k. Uses a Monotonic Deque.",
+    sections: [
+      {
+        title: "The Task",
+        content: "Given an array and window size k, return the max of each window as it slides.\n\n**Example**: nums = [1,3,-1,-3,5,3,6,7], k = 3 → [3,3,5,5,6,7]"
+      },
+      {
+        title: "Strategy",
+        content: "Use a **Monotonic Decreasing Deque**. The front of the deque is always the max of the current window. We store indices, not values."
+      },
+      {
+        title: "Implementation",
+        content: "Maintain a deque where elements are in decreasing order.",
+        codeNote: "Monotonic Deque: Elements are kept in decreasing order. Front is always the max. Time: O(N). Space: O(K).",
+        relatedTopicLink: "py-collections",
+        code: `from collections import deque
+
+def max_sliding_window(nums, k):
+    if not nums:
+        return []
+    
+    dq = deque()  # Store indices
+    result = []
+    
+    for i in range(len(nums)):
+        # Remove indices outside the window
+        while dq and dq[0] < i - k + 1:
+            dq.popleft()
+        
+        # Remove smaller elements (they can never be max)
+        while dq and nums[dq[-1]] < nums[i]:
+            dq.pop()
+        
+        dq.append(i)
+        
+        # Window is complete
+        if i >= k - 1:
+            result.append(nums[dq[0]])
+    
+    return result`
+      }
+    ]
+  },
+  
+  // =========================================
+  // MORE SOLVED PROBLEMS - HEAP
+  // =========================================
+  {
+    id: "prob-kth-largest",
+    category: "Solved Problems",
+    title: "Kth Largest Element in Array",
+    description: "Find the kth largest element. Can use Heap or QuickSelect.",
+    sections: [
+      {
+        title: "The Task",
+        content: "Find the kth largest element in an unsorted array.\n\n**Example**: nums = [3,2,1,5,6,4], k = 2 → 5"
+      },
+      {
+        title: "Solution 1: Min-Heap of Size K",
+        content: "Maintain a min-heap of size k. The top is the kth largest.",
+        codeNote: "Min-Heap Trick: Keep k largest elements. The smallest of these is the kth largest. Time: O(N log K). Space: O(K).",
+        relatedTopicLink: "py-dsa-heap",
+        code: `import heapq
+
+def find_kth_largest(nums, k):
+    heap = []
+    
+    for num in nums:
+        heapq.heappush(heap, num)
+        if len(heap) > k:
+            heapq.heappop(heap)
+    
+    return heap[0]
+
+# Or simply:
+def find_kth_largest_simple(nums, k):
+    return heapq.nlargest(k, nums)[-1]`
+      },
+      {
+        title: "Solution 2: QuickSelect (O(N) average)",
+        content: "Partition like QuickSort, but only recurse on one side.",
+        code: `import random
+
+def find_kth_largest_quickselect(nums, k):
+    k = len(nums) - k  # Convert to kth smallest
+    
+    def quickselect(left, right):
+        pivot_idx = random.randint(left, right)
+        nums[pivot_idx], nums[right] = nums[right], nums[pivot_idx]
+        pivot = nums[right]
+        
+        store_idx = left
+        for i in range(left, right):
+            if nums[i] < pivot:
+                nums[store_idx], nums[i] = nums[i], nums[store_idx]
+                store_idx += 1
+        
+        nums[store_idx], nums[right] = nums[right], nums[store_idx]
+        
+        if store_idx == k:
+            return nums[k]
+        elif store_idx < k:
+            return quickselect(store_idx + 1, right)
+        else:
+            return quickselect(left, store_idx - 1)
+    
+    return quickselect(0, len(nums) - 1)`
+      }
+    ]
+  },
+  {
+    id: "prob-merge-k-sorted",
+    category: "Solved Problems",
+    title: "Merge K Sorted Lists",
+    description: "Merge k sorted linked lists into one sorted list. Uses a Min-Heap.",
+    sections: [
+      {
+        title: "The Task",
+        content: "You are given an array of k linked-lists, each sorted in ascending order. Merge all into one sorted list."
+      },
+      {
+        title: "Strategy",
+        content: "Use a min-heap to always get the smallest element among all list heads. Pop, add to result, push the next element from that list."
+      },
+      {
+        title: "Implementation",
+        content: "We need to handle comparison of ListNodes by wrapping in tuples.",
+        codeNote: "Heap with Tuples: Use (value, index, node) to avoid comparing nodes directly. Time: O(N log K). Space: O(K).",
+        relatedTopicLink: "py-dsa-heap",
+        code: `import heapq
+
+def merge_k_lists(lists):
+    heap = []
+    dummy = ListNode(0)
+    curr = dummy
+    
+    # Initialize heap with first node of each list
+    for i, node in enumerate(lists):
+        if node:
+            heapq.heappush(heap, (node.val, i, node))
+    
+    while heap:
+        val, i, node = heapq.heappop(heap)
+        curr.next = node
+        curr = curr.next
+        
+        if node.next:
+            heapq.heappush(heap, (node.next.val, i, node.next))
+    
+    return dummy.next`
+      }
+    ]
+  },
+  {
+    id: "prob-top-k-frequent",
+    category: "Solved Problems",
+    title: "Top K Frequent Elements",
+    description: "Find the k most frequent elements. Uses Counter + Heap.",
+    sections: [
+      {
+        title: "The Task",
+        content: "Given an integer array and k, return the k most frequent elements.\n\n**Example**: nums = [1,1,1,2,2,3], k = 2 → [1,2]"
+      },
+      {
+        title: "Solution 1: Heap",
+        content: "Count frequencies, then use heap to get top k.",
+        codeNote: "Counter + Heap: Counter is O(N), heap is O(N log K). Total Time: O(N log K). Space: O(N).",
+        relatedTopicLink: "py-collections",
+        code: `from collections import Counter
+import heapq
+
+def top_k_frequent(nums, k):
+    count = Counter(nums)
+    return heapq.nlargest(k, count.keys(), key=count.get)
+
+# Or use Counter's built-in:
+def top_k_frequent_simple(nums, k):
+    return [x[0] for x in Counter(nums).most_common(k)]`
+      },
+      {
+        title: "Solution 2: Bucket Sort (O(N))",
+        content: "Create buckets where index = frequency. No heap needed.",
+        code: `def top_k_frequent_bucket(nums, k):
+    count = Counter(nums)
+    
+    # Buckets: index = frequency, value = list of nums with that freq
+    buckets = [[] for _ in range(len(nums) + 1)]
+    for num, freq in count.items():
+        buckets[freq].append(num)
+    
+    result = []
+    for i in range(len(buckets) - 1, -1, -1):
+        for num in buckets[i]:
+            result.append(num)
+            if len(result) == k:
+                return result
+    
+    return result`
+      }
+    ]
+  },
+  {
+    id: "prob-median-stream",
+    category: "Solved Problems",
+    title: "Find Median from Data Stream",
+    description: "Design a data structure that supports adding numbers and finding median. Uses Two Heaps.",
+    sections: [
+      {
+        title: "The Task",
+        content: "Implement `addNum(num)` and `findMedian()`. The median is the middle value in a sorted list."
+      },
+      {
+        title: "Strategy: Two Heaps",
+        content: "- **Max-Heap** for the smaller half.\n- **Min-Heap** for the larger half.\n- Keep them balanced (sizes differ by at most 1).\n- Median is the top of one or average of both tops."
+      },
+      {
+        title: "Implementation",
+        content: "Python only has min-heap, so negate values for max-heap.",
+        codeNote: "Two Heaps: Balancing ensures median is always accessible at heap tops. Time: O(log N) add, O(1) median. Space: O(N).",
+        relatedTopicLink: "py-dsa-heap",
+        code: `import heapq
+
+class MedianFinder:
+    def __init__(self):
+        self.small = []  # Max-heap (negated)
+        self.large = []  # Min-heap
+    
+    def addNum(self, num):
+        # Add to max-heap first
+        heapq.heappush(self.small, -num)
+        
+        # Balance: move largest from small to large
+        heapq.heappush(self.large, -heapq.heappop(self.small))
+        
+        # Ensure small has equal or one more element
+        if len(self.large) > len(self.small):
+            heapq.heappush(self.small, -heapq.heappop(self.large))
+    
+    def findMedian(self):
+        if len(self.small) > len(self.large):
+            return -self.small[0]
+        return (-self.small[0] + self.large[0]) / 2`
+      }
+    ]
+  },
+  
+  // =========================================
+  // MORE SOLVED PROBLEMS - DP
+  // =========================================
+  {
+    id: "prob-house-robber",
+    category: "Solved Problems",
+    title: "House Robber",
+    description: "Maximum sum of non-adjacent elements. Classic DP.",
+    sections: [
+      {
+        title: "The Task",
+        content: "You are a robber. Each house has money. You can't rob two adjacent houses (alarm triggers). Find max money.\n\n**Example**: nums = [1,2,3,1] → 4 (rob house 0 and 2)"
+      },
+      {
+        title: "Strategy",
+        content: "For each house, choose: Rob it (skip previous) or Skip it (take previous max).\n\n`dp[i] = max(dp[i-1], dp[i-2] + nums[i])`"
+      },
+      {
+        title: "Implementation",
+        content: "Space-optimized: only need last two values.",
+        codeNote: "DP Recurrence: At each step, choose max of (skip current) vs (take current + skip previous). Time: O(N). Space: O(1).",
+        relatedTopicLink: "py-dsa-dp",
+        code: `def rob(nums):
+    if not nums:
+        return 0
+    if len(nums) == 1:
+        return nums[0]
+    
+    prev2, prev1 = 0, 0
+    
+    for num in nums:
+        curr = max(prev1, prev2 + num)
+        prev2 = prev1
+        prev1 = curr
+    
+    return prev1
+
+# Example: nums = [2, 7, 9, 3, 1]
+# Returns 12 (rob 2 + 9 + 1)`
+      }
+    ]
+  },
+  {
+    id: "prob-longest-increasing",
+    category: "Solved Problems",
+    title: "Longest Increasing Subsequence",
+    description: "Find the length of the longest strictly increasing subsequence.",
+    sections: [
+      {
+        title: "The Task",
+        content: "Given an array, find the length of the longest strictly increasing subsequence.\n\n**Example**: nums = [10,9,2,5,3,7,101,18] → 4 ([2,3,7,101])"
+      },
+      {
+        title: "Solution 1: DP O(N²)",
+        content: "`dp[i]` = length of LIS ending at index i.",
+        code: `def length_of_lis_dp(nums):
+    if not nums:
+        return 0
+    
+    dp = [1] * len(nums)
+    
+    for i in range(1, len(nums)):
+        for j in range(i):
+            if nums[j] < nums[i]:
+                dp[i] = max(dp[i], dp[j] + 1)
+    
+    return max(dp)`
+      },
+      {
+        title: "Solution 2: Binary Search O(N log N)",
+        content: "Maintain a list of the smallest tail of all increasing subsequences of each length.",
+        codeNote: "Patience Sorting: The 'tails' array represents the smallest possible tail for each LIS length. Time: O(N log N). Space: O(N).",
+        relatedTopicLink: "py-dsa-binary-search",
+        code: `import bisect
+
+def length_of_lis(nums):
+    tails = []
+    
+    for num in nums:
+        pos = bisect.bisect_left(tails, num)
+        if pos == len(tails):
+            tails.append(num)
+        else:
+            tails[pos] = num
+    
+    return len(tails)
+
+# Example: nums = [10,9,2,5,3,7,101,18]
+# tails evolves: [10] -> [9] -> [2] -> [2,5] -> [2,3] -> [2,3,7] -> [2,3,7,101] -> [2,3,7,18]
+# Returns 4`
+      }
+    ]
+  },
+  {
+    id: "prob-word-break",
+    category: "Solved Problems",
+    title: "Word Break",
+    description: "Can a string be segmented into dictionary words? DP with string matching.",
+    sections: [
+      {
+        title: "The Task",
+        content: "Given a string and a dictionary of words, return true if the string can be segmented into space-separated dictionary words.\n\n**Example**: s = 'leetcode', wordDict = ['leet', 'code'] → true"
+      },
+      {
+        title: "Strategy",
+        content: "`dp[i]` = true if s[0:i] can be segmented. For each position, check all possible last words."
+      },
+      {
+        title: "Implementation",
+        content: "Convert wordDict to a set for O(1) lookup.",
+        codeNote: "DP with Set Lookup: Check all possible last words at each position. Time: O(N² * M) where M is max word length. Space: O(N).",
+        relatedTopicLink: "py-dsa-dp",
+        code: `def word_break(s, wordDict):
+    word_set = set(wordDict)
+    dp = [False] * (len(s) + 1)
+    dp[0] = True  # Empty string is valid
+    
+    for i in range(1, len(s) + 1):
+        for j in range(i):
+            if dp[j] and s[j:i] in word_set:
+                dp[i] = True
+                break
+    
+    return dp[len(s)]
+
+# Example: s = "applepenapple", wordDict = ["apple", "pen"]
+# Returns True`
+      }
+    ]
+  },
+  {
+    id: "prob-edit-distance",
+    category: "Solved Problems",
+    title: "Edit Distance (Levenshtein)",
+    description: "Minimum operations to convert one string to another. Classic 2D DP.",
+    sections: [
+      {
+        title: "The Task",
+        content: "Given two strings, find the minimum number of operations (insert, delete, replace) to convert word1 to word2.\n\n**Example**: word1 = 'horse', word2 = 'ros' → 3"
+      },
+      {
+        title: "Strategy",
+        content: "`dp[i][j]` = min operations to convert word1[0:i] to word2[0:j].\n\n- If chars match: `dp[i][j] = dp[i-1][j-1]`\n- Else: `min(insert, delete, replace) + 1`"
+      },
+      {
+        title: "Implementation",
+        content: "Build the DP table bottom-up.",
+        codeNote: "2D DP: Each cell considers 3 operations. Time: O(M*N). Space: O(M*N) or O(N) with optimization.",
+        relatedTopicLink: "py-dsa-dp",
+        code: `def min_distance(word1, word2):
+    m, n = len(word1), len(word2)
+    dp = [[0] * (n + 1) for _ in range(m + 1)]
+    
+    # Base cases
+    for i in range(m + 1):
+        dp[i][0] = i  # Delete all chars
+    for j in range(n + 1):
+        dp[0][j] = j  # Insert all chars
+    
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            if word1[i-1] == word2[j-1]:
+                dp[i][j] = dp[i-1][j-1]
+            else:
+                dp[i][j] = 1 + min(
+                    dp[i-1][j],    # Delete
+                    dp[i][j-1],    # Insert
+                    dp[i-1][j-1]   # Replace
+                )
+    
+    return dp[m][n]`
+      }
+    ]
+  },
+  {
+    id: "prob-unique-paths",
+    category: "Solved Problems",
+    title: "Unique Paths",
+    description: "Count paths in a grid from top-left to bottom-right. Classic 2D DP.",
+    sections: [
+      {
+        title: "The Task",
+        content: "A robot is at the top-left of an m×n grid. It can only move right or down. How many unique paths to the bottom-right?"
+      },
+      {
+        title: "Strategy",
+        content: "`dp[i][j]` = number of paths to reach cell (i, j).\n\n`dp[i][j] = dp[i-1][j] + dp[i][j-1]` (from above + from left)"
+      },
+      {
+        title: "Implementation",
+        content: "Space-optimized: only need previous row.",
+        codeNote: "Grid DP: Each cell is sum of cell above and cell to the left. Time: O(M*N). Space: O(N).",
+        relatedTopicLink: "py-dsa-dp",
+        code: `def unique_paths(m, n):
+    dp = [1] * n  # First row is all 1s
+    
+    for i in range(1, m):
+        for j in range(1, n):
+            dp[j] += dp[j-1]
+    
+    return dp[n-1]
+
+# Example: m=3, n=7 → 28 paths`
+      }
+    ]
+  },
+  
+  // =========================================
+  // MORE SOLVED PROBLEMS - TREES
+  // =========================================
+  {
+    id: "prob-validate-bst",
+    category: "Solved Problems",
+    title: "Validate Binary Search Tree",
+    description: "Check if a tree is a valid BST. Tricky edge cases.",
+    sections: [
+      {
+        title: "The Task",
+        content: "Given a binary tree, determine if it is a valid BST.\n\n**BST Property**: Left subtree contains only nodes less than root. Right subtree contains only nodes greater than root."
+      },
+      {
+        title: "Common Mistake",
+        content: "Just checking `node.left.val < node.val < node.right.val` is NOT enough. You must ensure ALL nodes in left subtree are less than root."
+      },
+      {
+        title: "Implementation",
+        content: "Pass min/max bounds down the recursion.",
+        codeNote: "Range Validation: Pass valid range to each subtree. Time: O(N). Space: O(H) where H is height.",
+        relatedTopicLink: "py-dsa-trees",
+        code: `def is_valid_bst(root):
+    def validate(node, min_val, max_val):
+        if not node:
+            return True
+        
+        if not (min_val < node.val < max_val):
+            return False
+        
+        return (validate(node.left, min_val, node.val) and
+                validate(node.right, node.val, max_val))
+    
+    return validate(root, float('-inf'), float('inf'))`
+      }
+    ]
+  },
+  {
+    id: "prob-lowest-common-ancestor",
+    category: "Solved Problems",
+    title: "Lowest Common Ancestor",
+    description: "Find the lowest common ancestor of two nodes in a binary tree.",
+    sections: [
+      {
+        title: "The Task",
+        content: "Given a binary tree and two nodes p and q, find their lowest common ancestor (LCA). The LCA is the lowest node that has both p and q as descendants."
+      },
+      {
+        title: "Strategy",
+        content: "Recursively search left and right subtrees. If both return non-null, current node is LCA. If only one returns non-null, that's the LCA."
+      },
+      {
+        title: "Implementation",
+        content: "Elegant recursive solution.",
+        codeNote: "Recursive LCA: If we find p in left and q in right (or vice versa), current node is LCA. Time: O(N). Space: O(H).",
+        relatedTopicLink: "py-dsa-trees",
+        code: `def lowest_common_ancestor(root, p, q):
+    if not root or root == p or root == q:
+        return root
+    
+    left = lowest_common_ancestor(root.left, p, q)
+    right = lowest_common_ancestor(root.right, p, q)
+    
+    if left and right:
+        return root  # p and q are in different subtrees
+    
+    return left if left else right`
+      }
+    ]
+  },
+  {
+    id: "prob-serialize-tree",
+    category: "Solved Problems",
+    title: "Serialize and Deserialize Binary Tree",
+    description: "Convert a tree to a string and back. Tests tree traversal and string parsing.",
+    sections: [
+      {
+        title: "The Task",
+        content: "Design an algorithm to serialize a binary tree to a string and deserialize that string back to the original tree."
+      },
+      {
+        title: "Strategy",
+        content: "Use preorder traversal. Mark null nodes with a special character (e.g., 'N'). Use a delimiter between values."
+      },
+      {
+        title: "Implementation",
+        content: "Serialize with preorder, deserialize by consuming tokens.",
+        codeNote: "Preorder Serialization: Root first, then left, then right. Use 'N' for null. Time: O(N). Space: O(N).",
+        relatedTopicLink: "py-dsa-trees",
+        code: `class Codec:
+    def serialize(self, root):
+        def preorder(node):
+            if not node:
+                return ['N']
+            return [str(node.val)] + preorder(node.left) + preorder(node.right)
+        
+        return ','.join(preorder(root))
+    
+    def deserialize(self, data):
+        tokens = iter(data.split(','))
+        
+        def build():
+            val = next(tokens)
+            if val == 'N':
+                return None
+            node = TreeNode(int(val))
+            node.left = build()
+            node.right = build()
+            return node
+        
+        return build()
+
+# Example: Tree [1,2,3,null,null,4,5]
+# Serializes to "1,2,N,N,3,4,N,N,5,N,N"`
+      }
+    ]
+  },
+  {
+    id: "prob-max-path-sum",
+    category: "Solved Problems",
+    title: "Binary Tree Maximum Path Sum",
+    description: "Find the maximum path sum in a binary tree. Path can start and end anywhere.",
+    sections: [
+      {
+        title: "The Task",
+        content: "A path is any sequence of nodes connected by edges. Find the path with the maximum sum. Path doesn't need to pass through root."
+      },
+      {
+        title: "Strategy",
+        content: "At each node, calculate:\n1. Max path going through this node (left + node + right).\n2. Max path starting from this node going up (node + max(left, right)).\n\nReturn #2 to parent, update global max with #1."
+      },
+      {
+        title: "Implementation",
+        content: "Use a global variable or nonlocal to track max.",
+        codeNote: "DFS with Global Max: Each node returns its best 'one-sided' path. Global max considers 'both-sided' paths. Time: O(N). Space: O(H).",
+        relatedTopicLink: "py-dsa-trees",
+        code: `def max_path_sum(root):
+    max_sum = float('-inf')
+    
+    def dfs(node):
+        nonlocal max_sum
+        if not node:
+            return 0
+        
+        # Max sum from left/right subtrees (ignore negative paths)
+        left = max(dfs(node.left), 0)
+        right = max(dfs(node.right), 0)
+        
+        # Path through this node
+        path_sum = node.val + left + right
+        max_sum = max(max_sum, path_sum)
+        
+        # Return max one-sided path to parent
+        return node.val + max(left, right)
+    
+    dfs(root)
+    return max_sum`
+      }
+    ]
+  },
+  
+  // =========================================
+  // MORE SOLVED PROBLEMS - GRAPHS
+  // =========================================
+  {
+    id: "prob-clone-graph",
+    category: "Solved Problems",
+    title: "Clone Graph",
+    description: "Create a deep copy of a graph. Tests DFS/BFS with hash map.",
+    sections: [
+      {
+        title: "The Task",
+        content: "Given a reference to a node in a connected undirected graph, return a deep copy (clone) of the graph."
+      },
+      {
+        title: "Strategy",
+        content: "Use a hash map to track `original node -> cloned node`. DFS/BFS through the graph, cloning as you go."
+      },
+      {
+        title: "Implementation",
+        content: "DFS with memoization.",
+        codeNote: "Hash Map for Cloning: Prevents infinite loops and duplicate clones. Time: O(V+E). Space: O(V).",
+        relatedTopicLink: "py-dsa-trees",
+        code: `def clone_graph(node):
+    if not node:
+        return None
+    
+    cloned = {}  # original -> clone
+    
+    def dfs(n):
+        if n in cloned:
+            return cloned[n]
+        
+        clone = Node(n.val)
+        cloned[n] = clone
+        
+        for neighbor in n.neighbors:
+            clone.neighbors.append(dfs(neighbor))
+        
+        return clone
+    
+    return dfs(node)`
+      }
+    ]
+  },
+  {
+    id: "prob-number-islands",
+    category: "Solved Problems",
+    title: "Number of Islands",
+    description: "Count connected components in a 2D grid. Classic BFS/DFS.",
+    sections: [
+      {
+        title: "The Task",
+        content: "Given a 2D grid of '1's (land) and '0's (water), count the number of islands. An island is surrounded by water and formed by connecting adjacent lands horizontally or vertically."
+      },
+      {
+        title: "Strategy",
+        content: "Iterate through grid. When you find a '1', increment count and 'sink' the entire island using DFS/BFS (mark all connected '1's as '0')."
+      },
+      {
+        title: "Implementation",
+        content: "DFS to sink islands.",
+        codeNote: "Grid DFS: Modify grid in-place to mark visited. Time: O(M*N). Space: O(M*N) for recursion stack.",
+        relatedTopicLink: "py-dsa-trees",
+        code: `def num_islands(grid):
+    if not grid:
+        return 0
+    
+    rows, cols = len(grid), len(grid[0])
+    count = 0
+    
+    def dfs(r, c):
+        if r < 0 or r >= rows or c < 0 or c >= cols or grid[r][c] == '0':
+            return
+        
+        grid[r][c] = '0'  # Sink this cell
+        dfs(r + 1, c)
+        dfs(r - 1, c)
+        dfs(r, c + 1)
+        dfs(r, c - 1)
+    
+    for r in range(rows):
+        for c in range(cols):
+            if grid[r][c] == '1':
+                count += 1
+                dfs(r, c)
+    
+    return count`
+      }
+    ]
+  },
+  {
+    id: "prob-word-ladder",
+    category: "Solved Problems",
+    title: "Word Ladder",
+    description: "Transform one word to another by changing one letter at a time. BFS for shortest path.",
+    sections: [
+      {
+        title: "The Task",
+        content: "Given two words and a dictionary, find the shortest transformation sequence from beginWord to endWord, changing only one letter at a time. Each intermediate word must be in the dictionary."
+      },
+      {
+        title: "Strategy",
+        content: "This is a graph problem! Words are nodes, edges connect words that differ by one letter. Use BFS for shortest path."
+      },
+      {
+        title: "Implementation",
+        content: "Preprocess dictionary for efficient neighbor lookup.",
+        codeNote: "BFS for Shortest Path: Level by level exploration. Preprocessing with wildcards speeds up neighbor finding. Time: O(M² * N). Space: O(M² * N).",
+        relatedTopicLink: "py-dsa-trees",
+        code: `from collections import defaultdict, deque
+
+def ladder_length(beginWord, endWord, wordList):
+    if endWord not in wordList:
+        return 0
+    
+    # Preprocess: Create adjacency list with wildcards
+    # "hot" -> {"*ot": ["hot", "dot", ...], "h*t": [...], ...}
+    L = len(beginWord)
+    all_combo = defaultdict(list)
+    
+    for word in wordList:
+        for i in range(L):
+            pattern = word[:i] + '*' + word[i+1:]
+            all_combo[pattern].append(word)
+    
+    # BFS
+    queue = deque([(beginWord, 1)])
+    visited = {beginWord}
+    
+    while queue:
+        word, level = queue.popleft()
+        
+        for i in range(L):
+            pattern = word[:i] + '*' + word[i+1:]
+            
+            for neighbor in all_combo[pattern]:
+                if neighbor == endWord:
+                    return level + 1
+                
+                if neighbor not in visited:
+                    visited.add(neighbor)
+                    queue.append((neighbor, level + 1))
+    
+    return 0`
+      }
+    ]
+  },
+  
+  // =========================================
+  // MORE SOLVED PROBLEMS - BACKTRACKING
+  // =========================================
+  {
+    id: "prob-generate-parentheses",
+    category: "Solved Problems",
+    title: "Generate Parentheses",
+    description: "Generate all valid combinations of n pairs of parentheses. Classic backtracking.",
+    sections: [
+      {
+        title: "The Task",
+        content: "Given n pairs of parentheses, generate all combinations of well-formed parentheses.\n\n**Example**: n = 3 → ['((()))', '(()())', '(())()', '()(())', '()()()']"
+      },
+      {
+        title: "Strategy",
+        content: "Backtrack with constraints:\n- Can add '(' if open count < n.\n- Can add ')' if close count < open count."
+      },
+      {
+        title: "Implementation",
+        content: "Track open and close counts.",
+        codeNote: "Constrained Backtracking: Only add valid characters. Time: O(4^N / sqrt(N)). Space: O(N).",
+        relatedTopicLink: "py-dsa-backtracking",
+        code: `def generate_parenthesis(n):
+    result = []
+    
+    def backtrack(s, open_count, close_count):
+        if len(s) == 2 * n:
+            result.append(s)
+            return
+        
+        if open_count < n:
+            backtrack(s + '(', open_count + 1, close_count)
+        
+        if close_count < open_count:
+            backtrack(s + ')', open_count, close_count + 1)
+    
+    backtrack('', 0, 0)
+    return result`
+      }
+    ]
+  },
+  {
+    id: "prob-combination-sum",
+    category: "Solved Problems",
+    title: "Combination Sum",
+    description: "Find all combinations that sum to target. Numbers can be reused.",
+    sections: [
+      {
+        title: "The Task",
+        content: "Given an array of distinct integers and a target, return all unique combinations where the chosen numbers sum to target. The same number may be chosen unlimited times."
+      },
+      {
+        title: "Strategy",
+        content: "Backtrack, but don't move to the next index after choosing a number (allows reuse). Prune when sum exceeds target."
+      },
+      {
+        title: "Implementation",
+        content: "Sort for early termination optimization.",
+        codeNote: "Backtracking with Reuse: Stay at same index to allow repeated use. Time: O(N^(T/M)) where T is target, M is min candidate. Space: O(T/M).",
+        relatedTopicLink: "py-dsa-backtracking",
+        code: `def combination_sum(candidates, target):
+    result = []
+    candidates.sort()  # Optional: helps with pruning
+    
+    def backtrack(start, path, remaining):
+        if remaining == 0:
+            result.append(path[:])
+            return
+        
+        for i in range(start, len(candidates)):
+            if candidates[i] > remaining:
+                break  # Prune: too big
+            
+            path.append(candidates[i])
+            backtrack(i, path, remaining - candidates[i])  # i, not i+1 (reuse)
+            path.pop()
+    
+    backtrack(0, [], target)
+    return result
+
+# Example: candidates = [2,3,6,7], target = 7
+# Returns [[2,2,3], [7]]`
+      }
+    ]
+  },
+  {
+    id: "prob-n-queens",
+    category: "Solved Problems",
+    title: "N-Queens",
+    description: "Place N queens on an N×N board so no two attack each other. The ultimate backtracking problem.",
+    sections: [
+      {
+        title: "The Task",
+        content: "Place n queens on an n×n chessboard such that no two queens attack each other. Return all distinct solutions."
+      },
+      {
+        title: "Strategy",
+        content: "Place queens row by row. For each row, try each column. Check if position is safe (no queen in same column, diagonal). Use sets to track attacked columns and diagonals."
+      },
+      {
+        title: "Implementation",
+        content: "Diagonal tracking: row-col is constant for one diagonal, row+col for the other.",
+        codeNote: "Diagonal Sets: row-col identifies one diagonal direction, row+col identifies the other. Time: O(N!). Space: O(N).",
+        relatedTopicLink: "py-dsa-backtracking",
+        code: `def solve_n_queens(n):
+    result = []
+    cols = set()
+    diag1 = set()  # row - col
+    diag2 = set()  # row + col
+    
+    def backtrack(row, board):
+        if row == n:
+            result.append([''.join(r) for r in board])
+            return
+        
+        for col in range(n):
+            if col in cols or (row - col) in diag1 or (row + col) in diag2:
+                continue
+            
+            cols.add(col)
+            diag1.add(row - col)
+            diag2.add(row + col)
+            board[row][col] = 'Q'
+            
+            backtrack(row + 1, board)
+            
+            cols.remove(col)
+            diag1.remove(row - col)
+            diag2.remove(row + col)
+            board[row][col] = '.'
+    
+    board = [['.' for _ in range(n)] for _ in range(n)]
+    backtrack(0, board)
+    return result`
+      }
+    ]
+  },
+  
+  // =========================================
+  // MORE SOLVED PROBLEMS - ARRAYS & STRINGS
+  // =========================================
+  {
+    id: "prob-product-except-self",
+    category: "Solved Problems",
+    title: "Product of Array Except Self",
+    description: "Return array where each element is product of all other elements. No division allowed.",
+    sections: [
+      {
+        title: "The Task",
+        content: "Given an array nums, return an array where answer[i] is the product of all elements except nums[i]. You cannot use division."
+      },
+      {
+        title: "Strategy",
+        content: "Two passes:\n1. Left pass: Calculate product of all elements to the left.\n2. Right pass: Multiply by product of all elements to the right."
+      },
+      {
+        title: "Implementation",
+        content: "Use output array as left products, then multiply with right products.",
+        codeNote: "Prefix/Suffix Products: Build left products, then right products in reverse. Time: O(N). Space: O(1) excluding output.",
+        relatedTopicLink: "py-lists",
+        code: `def product_except_self(nums):
+    n = len(nums)
+    result = [1] * n
+    
+    # Left products
+    left = 1
+    for i in range(n):
+        result[i] = left
+        left *= nums[i]
+    
+    # Right products
+    right = 1
+    for i in range(n - 1, -1, -1):
+        result[i] *= right
+        right *= nums[i]
+    
+    return result
+
+# Example: nums = [1,2,3,4]
+# Returns [24, 12, 8, 6]`
+      }
+    ]
+  },
+  {
+    id: "prob-rotate-array",
+    category: "Solved Problems",
+    title: "Rotate Array",
+    description: "Rotate array to the right by k steps. Multiple approaches.",
+    sections: [
+      {
+        title: "The Task",
+        content: "Given an array, rotate it to the right by k steps.\n\n**Example**: nums = [1,2,3,4,5,6,7], k = 3 → [5,6,7,1,2,3,4]"
+      },
+      {
+        title: "Solution: Reverse Three Times",
+        content: "1. Reverse entire array.\n2. Reverse first k elements.\n3. Reverse remaining elements.",
+        codeNote: "Triple Reverse: Elegant O(1) space solution. Time: O(N). Space: O(1).",
+        relatedTopicLink: "py-lists",
+        code: `def rotate(nums, k):
+    k = k % len(nums)  # Handle k > len(nums)
+    
+    def reverse(start, end):
+        while start < end:
+            nums[start], nums[end] = nums[end], nums[start]
+            start += 1
+            end -= 1
+    
+    reverse(0, len(nums) - 1)  # Reverse all
+    reverse(0, k - 1)          # Reverse first k
+    reverse(k, len(nums) - 1)  # Reverse rest
+
+# Example: [1,2,3,4,5,6,7], k=3
+# After step 1: [7,6,5,4,3,2,1]
+# After step 2: [5,6,7,4,3,2,1]
+# After step 3: [5,6,7,1,2,3,4]`
+      }
+    ]
+  },
+  {
+    id: "prob-valid-anagram",
+    category: "Solved Problems",
+    title: "Valid Anagram",
+    description: "Check if two strings are anagrams. Uses Counter or sorting.",
+    sections: [
+      {
+        title: "The Task",
+        content: "Given two strings s and t, return true if t is an anagram of s.\n\n**Example**: s = 'anagram', t = 'nagaram' → true"
+      },
+      {
+        title: "Solution 1: Counter",
+        content: "Count character frequencies and compare.",
+        codeNote: "Counter Comparison: Two strings are anagrams if they have the same character counts. Time: O(N). Space: O(1) for 26 letters.",
+        relatedTopicLink: "py-collections",
+        code: `from collections import Counter
+
+def is_anagram(s, t):
+    return Counter(s) == Counter(t)
+
+# Or manually:
+def is_anagram_manual(s, t):
+    if len(s) != len(t):
+        return False
+    
+    count = {}
+    for c in s:
+        count[c] = count.get(c, 0) + 1
+    
+    for c in t:
+        if c not in count:
+            return False
+        count[c] -= 1
+        if count[c] < 0:
+            return False
+    
+    return True`
+      },
+      {
+        title: "Solution 2: Sorting",
+        content: "Sort both strings and compare.",
+        code: `def is_anagram_sort(s, t):
+    return sorted(s) == sorted(t)
+
+# Time: O(N log N), Space: O(N)`
+      }
+    ]
+  },
+  {
+    id: "prob-group-anagrams",
+    category: "Solved Problems",
+    title: "Group Anagrams",
+    description: "Group strings that are anagrams of each other. Uses hash map with sorted key.",
+    sections: [
+      {
+        title: "The Task",
+        content: "Given an array of strings, group anagrams together.\n\n**Example**: ['eat','tea','tan','ate','nat','bat'] → [['eat','tea','ate'], ['tan','nat'], ['bat']]"
+      },
+      {
+        title: "Strategy",
+        content: "Anagrams have the same sorted characters. Use sorted string as key in a hash map."
+      },
+      {
+        title: "Implementation",
+        content: "defaultdict makes grouping easy.",
+        codeNote: "Sorted Key: All anagrams sort to the same string. Time: O(N * K log K) where K is max string length. Space: O(N * K).",
+        relatedTopicLink: "py-collections",
+        code: `from collections import defaultdict
+
+def group_anagrams(strs):
+    groups = defaultdict(list)
+    
+    for s in strs:
+        key = tuple(sorted(s))  # Tuple because lists aren't hashable
+        groups[key].append(s)
+    
+    return list(groups.values())
+
+# Alternative: Use character count as key (O(N * K))
+def group_anagrams_count(strs):
+    groups = defaultdict(list)
+    
+    for s in strs:
+        count = [0] * 26
+        for c in s:
+            count[ord(c) - ord('a')] += 1
+        groups[tuple(count)].append(s)
+    
+    return list(groups.values())`
+      }
+    ]
+  },
+  {
+    id: "prob-longest-palindrome-substring",
+    category: "Solved Problems",
+    title: "Longest Palindromic Substring",
+    description: "Find the longest palindrome in a string. Expand around center approach.",
+    sections: [
+      {
+        title: "The Task",
+        content: "Given a string, return the longest palindromic substring.\n\n**Example**: s = 'babad' → 'bab' or 'aba'"
+      },
+      {
+        title: "Strategy",
+        content: "For each position, expand around it as the center. Check both odd-length (single center) and even-length (double center) palindromes."
+      },
+      {
+        title: "Implementation",
+        content: "Helper function to expand and find palindrome length.",
+        codeNote: "Expand Around Center: O(N) centers, O(N) expansion each. Time: O(N²). Space: O(1).",
+        relatedTopicLink: "py-strings",
+        code: `def longest_palindrome(s):
+    if not s:
+        return ""
+    
+    def expand(left, right):
+        while left >= 0 and right < len(s) and s[left] == s[right]:
+            left -= 1
+            right += 1
+        return s[left + 1:right]
+    
+    result = ""
+    for i in range(len(s)):
+        # Odd length
+        odd = expand(i, i)
+        if len(odd) > len(result):
+            result = odd
+        
+        # Even length
+        even = expand(i, i + 1)
+        if len(even) > len(result):
+            result = even
+    
+    return result`
+      }
+    ]
+  },
+  
+  // =========================================
+  // MORE SOLVED PROBLEMS - INTERVALS
+  // =========================================
+  {
+    id: "prob-insert-interval",
+    category: "Solved Problems",
+    title: "Insert Interval",
+    description: "Insert a new interval into a sorted list of non-overlapping intervals.",
+    sections: [
+      {
+        title: "The Task",
+        content: "Given a sorted list of non-overlapping intervals and a new interval, insert the new interval and merge if necessary."
+      },
+      {
+        title: "Strategy",
+        content: "Three phases:\n1. Add all intervals that end before new interval starts.\n2. Merge all overlapping intervals.\n3. Add all remaining intervals."
+      },
+      {
+        title: "Implementation",
+        content: "Track the merged interval as you go.",
+        codeNote: "Three-Phase Processing: Before, During (merge), After. Time: O(N). Space: O(N).",
+        relatedTopicLink: "prob-merge-intervals",
+        code: `def insert(intervals, newInterval):
+    result = []
+    i = 0
+    n = len(intervals)
+    
+    # 1. Add all intervals before newInterval
+    while i < n and intervals[i][1] < newInterval[0]:
+        result.append(intervals[i])
+        i += 1
+    
+    # 2. Merge overlapping intervals
+    while i < n and intervals[i][0] <= newInterval[1]:
+        newInterval[0] = min(newInterval[0], intervals[i][0])
+        newInterval[1] = max(newInterval[1], intervals[i][1])
+        i += 1
+    result.append(newInterval)
+    
+    # 3. Add remaining intervals
+    while i < n:
+        result.append(intervals[i])
+        i += 1
+    
+    return result`
+      }
+    ]
+  },
+  {
+    id: "prob-meeting-rooms",
+    category: "Solved Problems",
+    title: "Meeting Rooms II",
+    description: "Find minimum number of meeting rooms required. Uses heap or sweep line.",
+    sections: [
+      {
+        title: "The Task",
+        content: "Given an array of meeting time intervals, find the minimum number of conference rooms required."
+      },
+      {
+        title: "Strategy",
+        content: "Sort by start time. Use a min-heap to track end times of ongoing meetings. If a new meeting starts after the earliest ending meeting, reuse that room."
+      },
+      {
+        title: "Implementation",
+        content: "Heap stores end times of current meetings.",
+        codeNote: "Min-Heap for End Times: If new meeting starts after heap top, pop and push. Else just push. Time: O(N log N). Space: O(N).",
+        relatedTopicLink: "py-dsa-heap",
+        code: `import heapq
+
+def min_meeting_rooms(intervals):
+    if not intervals:
+        return 0
+    
+    intervals.sort(key=lambda x: x[0])  # Sort by start time
+    heap = []  # Min-heap of end times
+    
+    for start, end in intervals:
+        if heap and heap[0] <= start:
+            heapq.heappop(heap)  # Reuse room
+        heapq.heappush(heap, end)
+    
+    return len(heap)
+
+# Example: [[0,30],[5,10],[15,20]]
+# Returns 2`
       }
     ]
   }
